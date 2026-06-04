@@ -5,6 +5,7 @@ import { CompactEmployeeCard } from "../components/CompactEmployeeCard";
 import { EmployeeDetailView } from "../components/EmployeeDetailView";
 import { EmployeeIdentity } from "../components/EmployeeIdentity";
 import { EditEntryModal } from "../components/EditEntryModal";
+import { UndoLastEntryModal } from "../components/UndoLastEntryModal";
 import { RecentEntries } from "../components/RecentEntries";
 import { Layout } from "../components/Layout";
 import { SessionInfoHeader } from "../components/SessionInfoHeader";
@@ -13,18 +14,21 @@ import { useSession } from "../context/SessionContext";
 import type { TrimCategory, WeightEntry } from "../types";
 import { getEmployeeTotals } from "../types";
 import { getRecentEntries } from "../utils/export";
+import { getNewestEntry } from "../utils/sessionEntries";
 import { getSessionEmployees } from "../utils/sessionEmployees";
 import { parseWholeWeight } from "../utils/format";
 
 export function LiveSessionPage() {
   const navigate = useNavigate();
   const { employees } = useMasterData();
-  const { session, addEntry, updateEntry, deleteEntry, endSession } = useSession();
+  const { session, addEntry, updateEntry, deleteEntry, undoLastEntry, endSession } = useSession();
 
   const [activeEmployeeId, setActiveEmployeeId] = useState<string>("");
   const [weight, setWeight] = useState("");
   const [flash, setFlash] = useState<TrimCategory | null>(null);
   const [editingEntry, setEditingEntry] = useState<WeightEntry | null>(null);
+  const [undoEntry, setUndoEntry] = useState<WeightEntry | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const sessionEmployees = useMemo(() => {
@@ -99,15 +103,40 @@ export function LiveSessionPage() {
     );
   }
 
+  const activeSession = session;
+
   const editingEmployee = editingEntry
     ? employees.find((e) => e.id === editingEntry.employeeId)
     : null;
+
+  const canUndo = activeSession.entries.length > 0;
+
+  const undoEmployee = undoEntry
+    ? sessionEmployees.find((employee) => employee.id === undoEntry.employeeId)
+    : null;
+
+  function handleUndoClick() {
+    const newest = getNewestEntry(activeSession.entries);
+    if (!newest) return;
+    setUndoEntry(newest);
+  }
+
+  function handleConfirmUndo() {
+    const entryToRemove = undoEntry;
+    undoLastEntry();
+    setUndoEntry(null);
+    setToast("Last entry removed");
+    setTimeout(() => setToast(null), 2500);
+    if (editingEntry && entryToRemove && editingEntry.id === entryToRemove.id) {
+      setEditingEntry(null);
+    }
+  }
 
   return (
     <Layout
       onBack={handleBack}
       backLabel="Setup"
-      headerCenter={<SessionInfoHeader session={session} compact />}
+      headerCenter={<SessionInfoHeader session={activeSession} compact />}
       headerRight={
         <Button variant="danger" size="md" onClick={handleEndSession}>
           End Session
@@ -124,7 +153,7 @@ export function LiveSessionPage() {
           </div>
           <div className={`grid ${gridCols} flex-1 gap-1 overflow-y-auto p-2 content-start`}>
             {sessionEmployees.map((employee) => {
-              const totals = getEmployeeTotals(employee.id, session.entries);
+              const totals = getEmployeeTotals(employee.id, activeSession.entries);
               return (
                 <CompactEmployeeCard
                   key={employee.id}
@@ -198,7 +227,21 @@ export function LiveSessionPage() {
             </div>
 
             <div className="mt-3 min-h-0 flex-1 overflow-hidden">
-              <RecentEntries entries={recentEntries} compact />
+              <RecentEntries
+                entries={recentEntries}
+                compact
+                headerAction={
+                  canUndo ? (
+                    <button
+                      type="button"
+                      onClick={handleUndoClick}
+                      className="shrink-0 rounded-lg border border-amber-500/50 bg-amber-600/20 px-2 py-1 text-[10px] font-semibold text-amber-200 transition-colors hover:bg-amber-600/35 active:scale-[0.97] touch-manipulation"
+                    >
+                      Undo Last Entry
+                    </button>
+                  ) : undefined
+                }
+              />
             </div>
           </div>
         </section>
@@ -214,7 +257,7 @@ export function LiveSessionPage() {
             {activeEmployee ? (
               <EmployeeDetailView
                 employee={activeEmployee}
-                entries={session.entries}
+                entries={activeSession.entries}
                 compact
                 onEdit={setEditingEntry}
                 onDelete={deleteEntry}
@@ -242,6 +285,20 @@ export function LiveSessionPage() {
           }}
           onClose={() => setEditingEntry(null)}
         />
+      )}
+      {undoEntry && undoEmployee && (
+        <UndoLastEntryModal
+          entry={undoEntry}
+          employee={undoEmployee}
+          onConfirm={handleConfirmUndo}
+          onClose={() => setUndoEntry(null)}
+        />
+      )}
+
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl border border-brand-500/40 bg-surface-800 px-5 py-3 text-sm font-semibold text-brand-300 shadow-lg">
+          {toast}
+        </div>
       )}
     </Layout>
   );

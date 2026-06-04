@@ -10,6 +10,7 @@ import {
 import type { Session, SessionEmployeeSnapshot, TrimCategory, WeightEntry } from "../types";
 import { archiveSession } from "../utils/archive";
 import { generateId } from "../utils/id";
+import { getNewestEntry, undoLastEntry } from "../utils/sessionEntries";
 import { loadActiveSession, persistActiveSession } from "../utils/sessionPersist";
 import { enqueueSync, processSyncQueue } from "../utils/syncQueue";
 
@@ -31,6 +32,7 @@ interface SessionContextValue {
     updates: { weight?: number; category?: TrimCategory },
   ) => void;
   deleteEntry: (entryId: string) => void;
+  undoLastEntry: () => WeightEntry | null;
   endSession: () => void;
   resumeSession: () => void;
   clearSession: () => void;
@@ -135,6 +137,20 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const undoLastEntryFn = useCallback((): WeightEntry | null => {
+    let removed: WeightEntry | null = null;
+    setSession((prev) => {
+      if (!prev || prev.endedAt) return prev;
+      const newest = getNewestEntry(prev.entries);
+      if (!newest) return prev;
+      removed = newest;
+      const next = undoLastEntry(prev);
+      commitSession(next);
+      return next;
+    });
+    return removed;
+  }, []);
+
   const endSession = useCallback(() => {
     setSession((prev) => {
       if (!prev || prev.endedAt) return prev;
@@ -168,11 +184,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       addEntry,
       updateEntry,
       deleteEntry,
+      undoLastEntry: undoLastEntryFn,
       endSession,
       resumeSession,
       clearSession,
     }),
-    [session, startSession, addEntry, updateEntry, deleteEntry, endSession, resumeSession, clearSession],
+    [session, startSession, addEntry, updateEntry, deleteEntry, undoLastEntryFn, endSession, resumeSession, clearSession],
   );
 
   return (
