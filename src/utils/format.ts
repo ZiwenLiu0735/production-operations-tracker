@@ -1,8 +1,25 @@
 import type { TrimCategory } from "../types";
 import { CATEGORY_LABELS } from "../types";
 
+export const GRAMS_PER_LB = 454;
+
 export function formatWeight(grams: number): string {
   return `${Math.round(grams)}g`;
+}
+
+/** Converts grams to pounds, rounded to 2 decimal places. */
+export function gramsToLbs(grams: number): string {
+  return (grams / GRAMS_PER_LB).toFixed(2);
+}
+
+export function formatLbs(grams: number): string {
+  return `${gramsToLbs(grams)} lb`;
+}
+
+/** Summary display: grams primary, pounds secondary. */
+export function formatWeightWithLbs(grams: number): string {
+  const rounded = Math.round(grams);
+  return `${rounded}g (${gramsToLbs(rounded)} lb)`;
 }
 
 export function formatTime(timestamp: number): string {

@@ -1,7 +1,7 @@
 import { EmployeeIdentity } from "./EmployeeIdentity";
 import type { Employee, TrimCategory, WeightEntry } from "../types";
 import { CATEGORY_LABELS, getEntriesByCategory, getEmployeeTotals, getGrandTotal } from "../types";
-import { formatTime, formatWeight } from "../utils/format";
+import { formatTime, formatWeight, formatWeightWithLbs } from "../utils/format";
 
 interface EmployeeDetailViewProps {
   employee: Employee;
@@ -67,7 +67,7 @@ export function EmployeeDetailView({
                 <span
                   className={`font-bold tabular-nums text-white ${compact ? "text-sm" : "text-lg"}`}
                 >
-                  {formatWeight(subtotal)}
+                  {formatWeightWithLbs(subtotal)}
                 </span>
               </div>
             </div>
@@ -86,7 +86,7 @@ export function EmployeeDetailView({
             <span
               className={`font-bold tabular-nums text-brand-400 ${compact ? "text-lg" : "text-2xl"}`}
             >
-              {formatWeight(grandTotal)}
+              {formatWeightWithLbs(grandTotal)}
             </span>
           </div>
         </div>

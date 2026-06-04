@@ -11,7 +11,8 @@ import { getGrandTotal } from "../types";
 import { exportRawDataCSV } from "../utils/export";
 import { archivedToSession, snapshotToEmployee } from "../utils/archiveView";
 import { sortEmployeesByNumber } from "../utils/employees";
-import { formatDate, formatDuration, formatWeight } from "../utils/format";
+import { GrandTotalCard, ProductionStat, SummaryLine } from "../components/WeightSummary";
+import { formatDate, formatDuration, formatWeightWithLbs } from "../utils/format";
 
 export function ArchiveDetailPage() {
   useArchiveRefreshOnMount();
@@ -107,7 +108,7 @@ export function ArchiveDetailPage() {
               label="Active Entries"
               value={String(archived.entries.filter((entry) => !entry.deletedAt).length)}
             />
-            <InfoCard label="Grand Total" value={formatWeight(sessionGrandTotal)} />
+            <GrandTotalCard grams={sessionGrandTotal} />
           </div>
 
           <div className="mb-6 grid grid-cols-3 gap-3">
@@ -148,7 +149,7 @@ export function ArchiveDetailPage() {
                     <div className="flex items-baseline justify-between border-t border-surface-600/50 pt-2">
                       <span className="text-sm font-bold text-white/60">Total</span>
                       <span className="text-xl font-bold tabular-nums text-brand-400">
-                        {formatWeight(total)}
+                        {formatWeightWithLbs(total)}
                       </span>
                     </div>
                   </div>
@@ -188,30 +189,3 @@ function InfoCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ProductionStat({
-  label,
-  value,
-  color = "text-white",
-}: {
-  label: string;
-  value: number;
-  color?: string;
-}) {
-  return (
-    <div className="rounded-xl border border-surface-600 bg-surface-800 p-4 text-center">
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-white/40">{label}</p>
-      <p className={`mt-1 text-2xl font-bold tabular-nums ${color}`}>{formatWeight(value)}</p>
-    </div>
-  );
-}
-
-function SummaryLine({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="flex items-baseline justify-between">
-      <span className="text-sm text-white/50">{label}:</span>
-      <span className="text-sm font-semibold tabular-nums text-white">
-        {formatWeight(value)}
-      </span>
-    </div>
-  );
-}

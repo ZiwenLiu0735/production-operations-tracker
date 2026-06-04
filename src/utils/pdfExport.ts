@@ -9,7 +9,13 @@ import {
   getSessionTotals,
 } from "../types";
 import { employeeDisplayName, formatEmployeeId } from "./employees";
-import { formatDate, formatDuration, formatTime, formatDateShort } from "./format";
+import {
+  formatDate,
+  formatDuration,
+  formatTime,
+  formatDateShort,
+  formatWeightWithLbs,
+} from "./format";
 
 const PAGE_MARGIN = 20;
 const LINE_HEIGHT = 7;
@@ -78,12 +84,12 @@ function buildEmployeeReceiptPdf(
       }
     }
 
-    addLine(`  Subtotal: ${subtotal}g`, 10, "bold");
+    addLine(`  Subtotal: ${formatWeightWithLbs(subtotal)}`, 10, "bold");
     y += 2;
   }
 
   y += 2;
-  addLine(`GRAND TOTAL: ${grandTotal}g`, 14, "bold");
+  addLine(`GRAND TOTAL: ${formatWeightWithLbs(grandTotal)}`, 14, "bold");
 
   return doc;
 }
@@ -140,10 +146,10 @@ export function exportSessionSummaryPDF(session: Session, employees: Employee[])
   y += 4;
 
   addLine("Session Totals", 12, "bold");
-  addLine(`  Regular Trim: ${sessionTotals.regular}g`);
-  addLine(`  Stick Trim: ${sessionTotals.stick}g`);
-  addLine(`  Smalls: ${sessionTotals.smalls}g`);
-  addLine(`  Grand Total: ${grandTotal}g`, 11, "bold");
+  addLine(`  Regular Trim: ${formatWeightWithLbs(sessionTotals.regular)}`);
+  addLine(`  Stick Trim: ${formatWeightWithLbs(sessionTotals.stick)}`);
+  addLine(`  Smalls: ${formatWeightWithLbs(sessionTotals.smalls)}`);
+  addLine(`  Grand Total: ${formatWeightWithLbs(grandTotal)}`, 11, "bold");
   y += 4;
 
   addLine("Employee Summary", 12, "bold");
@@ -163,7 +169,7 @@ export function exportSessionSummaryPDF(session: Session, employees: Employee[])
       "bold",
     );
     addLine(
-      `  Regular: ${totals.regular}g  Stick: ${totals.stick}g  Smalls: ${totals.smalls}g  Total: ${total}g`,
+      `  Regular: ${formatWeightWithLbs(totals.regular)}  Stick: ${formatWeightWithLbs(totals.stick)}  Smalls: ${formatWeightWithLbs(totals.smalls)}  Total: ${formatWeightWithLbs(total)}`,
       10,
     );
   }
