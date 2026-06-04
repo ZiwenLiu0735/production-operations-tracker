@@ -1,0 +1,33 @@
+{
+  "employees": [
+    { "id": "emp-23", "employeeNumber": 23, "legalName": "Deyou Xu", "nickname": "John", "active": true },
+    { "id": "emp-15", "employeeNumber": 15, "legalName": "Ming Li", "active": true },
+    { "id": "emp-30", "employeeNumber": 30, "legalName": "Wei Zhang", "nickname": "William", "active": true },
+    { "id": "emp-12", "employeeNumber": 12, "legalName": "Maria Santos", "nickname": "Maria", "active": true },
+    { "id": "emp-18", "employeeNumber": 18, "legalName": "James Chen", "nickname": "James", "active": true },
+    { "id": "emp-7", "employeeNumber": 7, "legalName": "Aisha Johnson", "nickname": "Aisha", "active": true },
+    { "id": "emp-41", "employeeNumber": 41, "legalName": "Carlos Rivera", "nickname": "Carlos", "active": true },
+    { "id": "emp-9", "employeeNumber": 9, "legalName": "Emily Park", "nickname": "Emily", "active": true },
+    { "id": "emp-33", "employeeNumber": 33, "legalName": "David Kim", "nickname": "Dave", "active": true },
+    { "id": "emp-27", "employeeNumber": 27, "legalName": "Sarah Williams", "nickname": "Sarah", "active": true },
+    { "id": "emp-44", "employeeNumber": 44, "legalName": "Michael Torres", "nickname": "Mike", "active": true },
+    { "id": "emp-5", "employeeNumber": 5, "legalName": "Lin Huang", "nickname": "Lin", "active": true }
+  ],
+  "facilities": [
+    { "id": "fac-1", "code": "GVC", "name": "Green Valley Cultivation" },
+    { "id": "fac-2", "code": "SMP", "name": "Summit Processing" },
+    { "id": "fac-3", "code": "PCF", "name": "Pacific Coast Farms" }
+  ],
+  "rooms": [
+    { "id": "room-1", "facilityId": "fac-1", "name": "Trim Room A" },
+    { "id": "room-2", "facilityId": "fac-1", "name": "Trim Room B" },
+    { "id": "room-3", "facilityId": "fac-1", "name": "Dry Room 1" },
+    { "id": "room-4", "facilityId": "fac-2", "name": "Main Trim Floor" },
+    { "id": "room-5", "facilityId": "fac-2", "name": "Trim Room 2" }
+  ],
+  "supervisors": [
+    { "id": "sup-1", "name": "Alex Morgan", "active": true },
+    { "id": "sup-2", "name": "Jordan Lee", "active": true },
+    { "id": "sup-3", "name": "Taylor Brooks", "active": true }
+  ]
+}
