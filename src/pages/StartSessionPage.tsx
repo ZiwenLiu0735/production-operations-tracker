@@ -1,98 +1,55 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ActiveSessionFound } from "../components/ActiveSessionFound";
 import { AppNav } from "../components/AppNav";
 import { Button } from "../components/Button";
 import { DeleteSessionModal } from "../components/DeleteSessionModal";
+import { EmployeeIdentity } from "../components/EmployeeIdentity";
 import { Layout } from "../components/Layout";
-import { selectClass, SettingsField } from "../components/settings/SettingsUi";
+import { SectionLabel, SelectTile } from "../components/SelectTile";
+import { useMasterData } from "../context/MasterDataContext";
 import { useSession } from "../context/SessionContext";
-import { type DbFacility, fetchFacilities } from "../lib/facilities";
-import { fetchRoomsByFacility, type DbRoom } from "../lib/rooms";
-import { createSession } from "../lib/sessions";
-import { fetchSupervisors, type DbSupervisor } from "../lib/supervisors";
+import { filterEmployees } from "../utils/employees";
 
 const WORK_TYPE_OPTIONS = [
-  { value: "trim", label: "Trim" },
-  { value: "pre-trim", label: "Pre-Trim" },
-  { value: "sorting", label: "Sorting" },
+  { value: "trim", label: "TRIM" },
+  { value: "deleaf", label: "DELEAF" },
+  { value: "chop", label: "CHOP" },
+  { value: "skirt", label: "SKIRT" },
+  { value: "package", label: "PACKAGE" },
+  { value: "sorting", label: "SORTING" },
 ];
+
+function getTrackPath(workType: string): string {
+  return workType === "trim" ? "/session" : "/hourly-track";
+}
 
 export function StartSessionPage() {
   const navigate = useNavigate();
-  const { session, endSession, clearSession } = useSession();
-
-  const [facilities, setFacilities] = useState<DbFacility[]>([]);
-  const [supervisors, setSupervisors] = useState<DbSupervisor[]>([]);
-  const [rooms, setRooms] = useState<DbRoom[]>([]);
+  const { session, startSession, endSession, clearSession } = useSession();
+  const { facilities, activeSupervisors, activeEmployees, rooms } = useMasterData();
 
   const [facilityId, setFacilityId] = useState("");
   const [roomId, setRoomId] = useState("");
   const [workType, setWorkType] = useState("");
   const [supervisorId, setSupervisorId] = useState("");
-
-  const [loading, setLoading] = useState(true);
-  const [loadingRooms, setLoadingRooms] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [roomsError, setRoomsError] = useState<string | null>(null);
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [starting, setStarting] = useState(false);
-  const [startError, setStartError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadFormData() {
-      setLoading(true);
-      setLoadError(null);
+  const facilityRooms = useMemo(
+    () =>
+      rooms.filter(
+        (room) => room.facilityId === facilityId && room.active !== false,
+      ),
+    [rooms, facilityId],
+  );
+  const facilityHasRooms = facilityRooms.length > 0;
 
-      const [facilitiesResult, supervisorsResult] = await Promise.all([
-        fetchFacilities(),
-        fetchSupervisors(),
-      ]);
-
-      if (facilitiesResult.error || supervisorsResult.error) {
-        setLoadError(facilitiesResult.error ?? supervisorsResult.error);
-        setFacilities([]);
-        setSupervisors([]);
-      } else {
-        const activeFacilities = (facilitiesResult.data ?? []).filter(
-          (facility) => facility.status === "active",
-        );
-        setFacilities(activeFacilities);
-        setSupervisors(supervisorsResult.data ?? []);
-      }
-
-      setLoading(false);
-    }
-
-    void loadFormData();
-  }, []);
-
-  useEffect(() => {
-    if (!facilityId) {
-      setRooms([]);
-      setRoomId("");
-      setRoomsError(null);
-      return;
-    }
-
-    async function loadRooms() {
-      setLoadingRooms(true);
-      setRoomsError(null);
-      setRoomId("");
-
-      const result = await fetchRoomsByFacility(facilityId);
-      if (result.error) {
-        setRoomsError(result.error);
-        setRooms([]);
-      } else {
-        setRooms(result.data ?? []);
-      }
-
-      setLoadingRooms(false);
-    }
-
-    void loadRooms();
-  }, [facilityId]);
+  const filteredEmployees = useMemo(
+    () => filterEmployees(activeEmployees, searchQuery),
+    [activeEmployees, searchQuery],
+  );
 
   useEffect(() => {
     if (session?.endedAt) {
@@ -104,42 +61,54 @@ export function StartSessionPage() {
     facilityId !== "" &&
     workType !== "" &&
     supervisorId !== "" &&
-    !loading &&
-    !loadError &&
-    !starting;
+    selectedEmployeeIds.length > 0;
 
-  async function handleStart(event: React.MouseEvent<HTMLButtonElement>) {
+  function toggleEmployee(id: string) {
+    setSelectedEmployeeIds((prev) =>
+      prev.includes(id) ? prev.filter((employeeId) => employeeId !== id) : [...prev, id],
+    );
+  }
+
+  function handleStart(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
     event.stopPropagation();
-
     if (!canStart) return;
 
-    setStarting(true);
-    setStartError(null);
+    const facility = facilities.find((item) => item.id === facilityId);
+    const supervisor = activeSupervisors.find((item) => item.id === supervisorId);
+    const room = roomId ? facilityRooms.find((item) => item.id === roomId) : undefined;
 
-    const { data, error } = await createSession({
-      facility_id: facilityId,
-      room_id: roomId || null,
-      supervisor_id: supervisorId,
-      work_type: workType,
+    if (!facility || !supervisor) return;
+
+    const employees = selectedEmployeeIds
+      .map((id) => activeEmployees.find((employee) => employee.id === id))
+      .filter((employee): employee is NonNullable<typeof employee> => employee !== undefined)
+      .map((employee) => ({
+        id: employee.id,
+        employeeNumber: employee.employeeNumber,
+        legalName: employee.legalName,
+        nickname: employee.nickname,
+      }));
+
+    startSession({
+      facilityId: facility.id,
+      facilityName: facility.name,
+      roomId: room?.id,
+      roomName: room?.name,
+      supervisorId: supervisor.id,
+      supervisorName: supervisor.name,
+      workType,
+      employeeIds: employees.map((employee) => employee.id),
+      employees,
     });
 
-    setStarting(false);
-
-    if (error || !data) {
-      setStartError(error ?? "Failed to create session.");
-      return;
-    }
-
-    if (workType === "trim") {
-      navigate(`/trim-track/${data.id}`, { state: { session: data } });
-    }
+    navigate(getTrackPath(workType));
   }
 
   const hasActiveSession = session !== null && !session.endedAt;
 
   function handleResume() {
-    navigate("/session");
+    navigate(session?.workType === "trim" ? "/session" : "/hourly-track");
   }
 
   function handleEndSession() {
@@ -155,7 +124,7 @@ export function StartSessionPage() {
   return (
     <Layout
       title="Start Session"
-      subtitle="Set up a new trim production session"
+      subtitle="Set up a new production session"
       onBack={hasActiveSession ? handleResume : undefined}
       backLabel="Resume Session"
       headerRight={<AppNav />}
@@ -180,103 +149,120 @@ export function StartSessionPage() {
               />
             )}
 
-            {loadError && (
-              <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                Failed to load form data: {loadError}
+            <section>
+              <SectionLabel>Facility</SectionLabel>
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {facilities.map((facility) => (
+                  <SelectTile
+                    key={facility.id}
+                    label={facility.name.toUpperCase()}
+                    selected={facilityId === facility.id}
+                    onClick={() => {
+                      setFacilityId(facility.id);
+                      setRoomId("");
+                    }}
+                  />
+                ))}
               </div>
+            </section>
+
+            {facilityId && facilityHasRooms && (
+              <section>
+                <SectionLabel>Room</SectionLabel>
+                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  {facilityRooms.map((room) => (
+                    <SelectTile
+                      key={room.id}
+                      label={room.name}
+                      selected={roomId === room.id}
+                      onClick={() => setRoomId(room.id)}
+                    />
+                  ))}
+                </div>
+              </section>
             )}
 
-            {startError && (
-              <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                Failed to start session: {startError}
+            <section>
+              <SectionLabel>Supervisor</SectionLabel>
+              <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                {activeSupervisors.map((supervisor) => (
+                  <SelectTile
+                    key={supervisor.id}
+                    label={supervisor.name}
+                    selected={supervisorId === supervisor.id}
+                    onClick={() => setSupervisorId(supervisor.id)}
+                  />
+                ))}
               </div>
-            )}
+            </section>
 
-            {loading ? (
-              <p className="text-sm text-white/50">Loading facilities and supervisors…</p>
-            ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <SettingsField label="Facility">
-                  <select
-                    value={facilityId}
-                    onChange={(e) => setFacilityId(e.target.value)}
-                    className={selectClass}
-                  >
-                    <option value="">Select facility…</option>
-                    {facilities.map((facility) => (
-                      <option key={facility.id} value={facility.id}>
-                        {facility.facility_code} — {facility.facility_name}
-                      </option>
-                    ))}
-                  </select>
-                </SettingsField>
-
-                <SettingsField label="Room (optional)">
-                  <select
-                    value={roomId}
-                    onChange={(e) => setRoomId(e.target.value)}
-                    className={selectClass}
-                    disabled={!facilityId || loadingRooms}
-                  >
-                    <option value="">
-                      {!facilityId
-                        ? "Select a facility first…"
-                        : loadingRooms
-                          ? "Loading rooms…"
-                          : "No room"}
-                    </option>
-                    {rooms.map((room) => (
-                      <option key={room.id} value={room.id}>
-                        {room.room_name}
-                      </option>
-                    ))}
-                  </select>
-                  {roomsError && (
-                    <p className="mt-1 text-xs text-red-300">Could not load rooms: {roomsError}</p>
-                  )}
-                  {facilityId && !loadingRooms && !roomsError && rooms.length === 0 && (
-                    <p className="mt-1 text-xs text-white/40">No rooms configured for this facility.</p>
-                  )}
-                </SettingsField>
-
-                <SettingsField label="Work Type">
-                  <select
-                    value={workType}
-                    onChange={(e) => setWorkType(e.target.value)}
-                    className={selectClass}
-                  >
-                    <option value="">Select work type…</option>
-                    {WORK_TYPE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </SettingsField>
-
-                <SettingsField label="Supervisor">
-                  <select
-                    value={supervisorId}
-                    onChange={(e) => setSupervisorId(e.target.value)}
-                    className={selectClass}
-                  >
-                    <option value="">Select supervisor…</option>
-                    {supervisors.map((supervisor) => (
-                      <option key={supervisor.id} value={supervisor.id}>
-                        {supervisor.supervisor_name}
-                      </option>
-                    ))}
-                  </select>
-                </SettingsField>
+            <section>
+              <SectionLabel>Work Type</SectionLabel>
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {WORK_TYPE_OPTIONS.map((option) => (
+                  <SelectTile
+                    key={option.value}
+                    label={option.label}
+                    selected={workType === option.value}
+                    onClick={() => setWorkType(option.value)}
+                  />
+                ))}
               </div>
-            )}
+            </section>
+
+            <section>
+              <SectionLabel>
+                Employees
+                {selectedEmployeeIds.length > 0 && (
+                  <span className="ml-2 font-normal text-brand-400">
+                    ({selectedEmployeeIds.length} selected)
+                  </span>
+                )}
+              </SectionLabel>
+
+              <input
+                type="search"
+                enterKeyHint="search"
+                placeholder="Search by ID, name, or preferred name…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="mt-2 w-full rounded-xl border-2 border-surface-600 bg-surface-800 px-4 py-3 text-base text-white outline-none placeholder:text-white/30 focus:border-brand-500"
+              />
+
+              {filteredEmployees.length === 0 ? (
+                <p className="mt-3 text-center text-sm text-white/40">
+                  No employees match your search
+                </p>
+              ) : (
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {filteredEmployees.map((employee) => {
+                    const selected = selectedEmployeeIds.includes(employee.id);
+                    return (
+                      <button
+                        key={employee.id}
+                        type="button"
+                        onClick={() => toggleEmployee(employee.id)}
+                        className={`rounded-xl border-2 p-3 text-left transition-all active:scale-[0.97] touch-manipulation
+                          ${
+                            selected
+                              ? "border-brand-500 bg-brand-600/15"
+                              : "border-surface-600 bg-surface-800 hover:border-surface-500"
+                          }`}
+                      >
+                        <EmployeeIdentity employee={employee} size="sm" />
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
           </div>
         </div>
 
         <div className="relative z-10 shrink-0 border-t border-surface-600/50 bg-surface-900 px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <div className="mx-auto w-full max-w-3xl">
-            <Button size="lg" fullWidth disabled={!canStart} onClick={(e) => void handleStart(e)}>
-              {starting ? "Starting…" : "Start Session"}
+            <Button size="lg" fullWidth disabled={!canStart} onClick={handleStart}>
+              Start Session
             </Button>
           </div>
         </div>

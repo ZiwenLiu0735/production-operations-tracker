@@ -23,6 +23,7 @@ interface SessionContextValue {
     roomName?: string;
     supervisorId: string;
     supervisorName: string;
+    workType?: string;
     employeeIds: string[];
     employees: SessionEmployeeSnapshot[];
   }) => void;
@@ -33,6 +34,8 @@ interface SessionContextValue {
   ) => void;
   deleteEntry: (entryId: string) => void;
   undoLastEntry: () => WeightEntry | null;
+  addEmployee: (employee: SessionEmployeeSnapshot) => void;
+  removeEmployee: (employeeId: string) => void;
   endSession: () => void;
   resumeSession: () => void;
   clearSession: () => void;
@@ -67,6 +70,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       roomName?: string;
       supervisorId: string;
       supervisorName: string;
+      workType?: string;
       employeeIds: string[];
       employees: SessionEmployeeSnapshot[];
     }) => {
@@ -151,6 +155,32 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return removed;
   }, []);
 
+  const addEmployee = useCallback((employee: SessionEmployeeSnapshot) => {
+    setSession((prev) => {
+      if (!prev || prev.employeeIds.includes(employee.id)) return prev;
+      const next = {
+        ...prev,
+        employeeIds: [...prev.employeeIds, employee.id],
+        employees: [...prev.employees, employee],
+      };
+      commitSession(next);
+      return next;
+    });
+  }, []);
+
+  const removeEmployee = useCallback((employeeId: string) => {
+    setSession((prev) => {
+      if (!prev) return prev;
+      const next = {
+        ...prev,
+        employeeIds: prev.employeeIds.filter((id) => id !== employeeId),
+        employees: prev.employees.filter((employee) => employee.id !== employeeId),
+      };
+      commitSession(next);
+      return next;
+    });
+  }, []);
+
   const endSession = useCallback(() => {
     setSession((prev) => {
       if (!prev || prev.endedAt) return prev;
@@ -185,11 +215,25 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       updateEntry,
       deleteEntry,
       undoLastEntry: undoLastEntryFn,
+      addEmployee,
+      removeEmployee,
       endSession,
       resumeSession,
       clearSession,
     }),
-    [session, startSession, addEntry, updateEntry, deleteEntry, undoLastEntryFn, endSession, resumeSession, clearSession],
+    [
+      session,
+      startSession,
+      addEntry,
+      updateEntry,
+      deleteEntry,
+      undoLastEntryFn,
+      addEmployee,
+      removeEmployee,
+      endSession,
+      resumeSession,
+      clearSession,
+    ],
   );
 
   return (

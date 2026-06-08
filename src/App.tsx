@@ -12,15 +12,11 @@ import { ArchiveEmployeeEditPage } from "./pages/ArchiveEmployeeEditPage";
 import { ArchivePage } from "./pages/ArchivePage";
 import { LiveSessionPage } from "./pages/LiveSessionPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { HourlyTrackPage } from "./pages/HourlyTrackPage";
 import { StartSessionPage } from "./pages/StartSessionPage";
-import { TrimTrackPage } from "./pages/TrimTrackPage";
 
 const EndSessionPage = lazy(() =>
   import("./pages/EndSessionPage").then((m) => ({ default: m.EndSessionPage })),
-);
-
-const FacilitiesTestPage = lazy(() =>
-  import("./pages/FacilitiesTestPage").then((m) => ({ default: m.FacilitiesTestPage })),
 );
 
 function PageLoader() {
@@ -43,9 +39,9 @@ export default function App() {
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/" element={<StartSessionPage />} />
-                    <Route path="/trim-track/:sessionId" element={<TrimTrackPage />} />
+                    <Route path="/session" element={<LiveSessionPage />} />
+                    <Route path="/hourly-track" element={<HourlyTrackPage />} />
                     <Route path="/settings" element={<SettingsPage />} />
-                    <Route path="/supabase/facilities" element={<FacilitiesTestPage />} />
                     <Route path="/archive" element={<ArchivePage />} />
                     <Route path="/archive/:id" element={<ArchiveDetailPage />} />
                     <Route path="/archive/:id/edit" element={<ArchiveEditPage />} />
@@ -53,8 +49,13 @@ export default function App() {
                       path="/archive/:id/employee/:employeeId"
                       element={<ArchiveEmployeeEditPage />}
                     />
-                    <Route path="/session" element={<LiveSessionPage />} />
                     <Route path="/summary" element={<EndSessionPage />} />
+                    <Route path="/trim-track/:sessionId" element={<Navigate to="/session" replace />} />
+                    <Route
+                      path="/trim-track/:sessionId/summary"
+                      element={<Navigate to="/summary" replace />}
+                    />
+                    <Route path="/hourly-track/:sessionId" element={<Navigate to="/hourly-track" replace />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </Suspense>

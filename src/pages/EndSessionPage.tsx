@@ -5,8 +5,8 @@ import { EmployeeIdentity } from "../components/EmployeeIdentity";
 import { Layout } from "../components/Layout";
 import { SessionInfoHeader } from "../components/SessionInfoHeader";
 import { useArchiveRefreshOnMount } from "../context/ArchiveContext";
-import { useMasterData } from "../context/MasterDataContext";
 import { useSession } from "../context/SessionContext";
+import { useMasterData } from "../context/MasterDataContext";
 import { getEmployeeTotals, getGrandTotal, getSessionTotals } from "../types";
 import { sortEmployeesByNumber } from "../utils/employees";
 import { exportRawDataCSV } from "../utils/export";
@@ -17,8 +17,8 @@ import { getSessionEmployees } from "../utils/sessionEmployees";
 export function EndSessionPage() {
   useArchiveRefreshOnMount();
   const navigate = useNavigate();
-  const { employees } = useMasterData();
   const { session, clearSession, resumeSession } = useSession();
+  const { activeEmployees } = useMasterData();
   const [exportStatus, setExportStatus] = useState<string | null>(null);
 
   useEffect(() => {
@@ -29,8 +29,8 @@ export function EndSessionPage() {
 
   const sessionEmployees = useMemo(() => {
     if (!session) return [];
-    return getSessionEmployees(session, employees);
-  }, [session, employees]);
+    return getSessionEmployees(session, activeEmployees);
+  }, [session, activeEmployees]);
 
   const sessionTotals = useMemo(
     () =>
@@ -43,7 +43,7 @@ export function EndSessionPage() {
 
   function handleBack() {
     resumeSession();
-    navigate("/session");
+    navigate(session?.workType === "trim" ? "/session" : "/hourly-track");
   }
 
   function handleNewSession() {
@@ -56,7 +56,7 @@ export function EndSessionPage() {
     setExportStatus("Generating employee receipts…");
     try {
       const { exportEmployeeReceiptPDFs } = await import("../utils/pdfExport");
-      await exportEmployeeReceiptPDFs(session, employees);
+      await exportEmployeeReceiptPDFs(session, activeEmployees);
       setExportStatus(
         sessionEmployees.length === 1
           ? "Employee receipt downloaded"
@@ -73,7 +73,7 @@ export function EndSessionPage() {
     if (!session) return;
     try {
       const { exportSessionSummaryPDF } = await import("../utils/pdfExport");
-      exportSessionSummaryPDF(session, employees);
+      exportSessionSummaryPDF(session, activeEmployees);
       setExportStatus("Session summary PDF downloaded");
     } catch (err) {
       setExportStatus(err instanceof Error ? err.message : "Export failed");
@@ -83,7 +83,7 @@ export function EndSessionPage() {
 
   function handleRawDataCsv() {
     if (!session) return;
-    exportRawDataCSV(session, employees);
+    exportRawDataCSV(session, activeEmployees);
     setExportStatus("Raw data CSV downloaded");
     setTimeout(() => setExportStatus(null), 4000);
   }

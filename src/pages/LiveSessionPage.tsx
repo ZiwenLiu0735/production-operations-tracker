@@ -8,9 +8,10 @@ import { EditEntryModal } from "../components/EditEntryModal";
 import { UndoLastEntryModal } from "../components/UndoLastEntryModal";
 import { RecentEntries } from "../components/RecentEntries";
 import { Layout } from "../components/Layout";
+import { PrototypeAddEmployeeModal } from "../components/PrototypeAddEmployeeModal";
 import { SessionInfoHeader } from "../components/SessionInfoHeader";
-import { useMasterData } from "../context/MasterDataContext";
 import { useSession } from "../context/SessionContext";
+import { useMasterData } from "../context/MasterDataContext";
 import type { TrimCategory, WeightEntry } from "../types";
 import { getEmployeeTotals } from "../types";
 import { getRecentEntries } from "../utils/export";
@@ -20,8 +21,17 @@ import { parseWholeWeight } from "../utils/format";
 
 export function LiveSessionPage() {
   const navigate = useNavigate();
-  const { employees } = useMasterData();
-  const { session, addEntry, updateEntry, deleteEntry, undoLastEntry, endSession } = useSession();
+  const {
+    session,
+    addEntry,
+    updateEntry,
+    deleteEntry,
+    undoLastEntry,
+    addEmployee,
+    removeEmployee,
+    endSession,
+  } = useSession();
+  const { activeEmployees } = useMasterData();
 
   const [activeEmployeeId, setActiveEmployeeId] = useState<string>("");
   const [weight, setWeight] = useState("");
@@ -29,12 +39,13 @@ export function LiveSessionPage() {
   const [editingEntry, setEditingEntry] = useState<WeightEntry | null>(null);
   const [undoEntry, setUndoEntry] = useState<WeightEntry | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [showAddEmployee, setShowAddEmployee] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const sessionEmployees = useMemo(() => {
     if (!session) return [];
-    return getSessionEmployees(session, employees);
-  }, [session, employees]);
+    return getSessionEmployees(session, activeEmployees);
+  }, [session, activeEmployees]);
 
   const recentEntries = useMemo(
     () => (session ? getRecentEntries(session.entries, 20) : []),
@@ -47,6 +58,10 @@ export function LiveSessionPage() {
   useEffect(() => {
     if (!session) {
       navigate("/", { replace: true });
+      return;
+    }
+    if (session.workType && session.workType !== "trim") {
+      navigate("/hourly-track", { replace: true });
       return;
     }
     if (session.endedAt) {
@@ -91,6 +106,31 @@ export function LiveSessionPage() {
     navigate("/summary");
   }
 
+  function handleAddEmployee(employee: (typeof activeEmployees)[number]) {
+    addEmployee({
+      id: employee.id,
+      employeeNumber: employee.employeeNumber,
+      legalName: employee.legalName,
+      nickname: employee.nickname,
+    });
+    setShowAddEmployee(false);
+    setActiveEmployeeId(employee.id);
+  }
+
+  function handleRemoveEmployee() {
+    if (!activeEmployeeId) return;
+    const employee = sessionEmployees.find((item) => item.id === activeEmployeeId);
+    if (
+      !window.confirm(
+        `Remove ${employee?.legalName ?? "this employee"} from the session? Existing entries will be kept.`,
+      )
+    ) {
+      return;
+    }
+    removeEmployee(activeEmployeeId);
+    setActiveEmployeeId("");
+  }
+
   function handleWeightChange(value: string) {
     setWeight(value.replace(/\D/g, ""));
   }
@@ -106,7 +146,7 @@ export function LiveSessionPage() {
   const activeSession = session;
 
   const editingEmployee = editingEntry
-    ? employees.find((e) => e.id === editingEntry.employeeId)
+    ? activeEmployees.find((e) => e.id === editingEntry.employeeId)
     : null;
 
   const canUndo = activeSession.entries.length > 0;
@@ -138,9 +178,22 @@ export function LiveSessionPage() {
       backLabel="Setup"
       headerCenter={<SessionInfoHeader session={activeSession} compact />}
       headerRight={
-        <Button variant="danger" size="md" onClick={handleEndSession}>
-          End Session
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button size="md" variant="secondary" onClick={() => setShowAddEmployee(true)}>
+            Add Employee
+          </Button>
+          <Button
+            size="md"
+            variant="secondary"
+            onClick={handleRemoveEmployee}
+            disabled={!activeEmployeeId}
+          >
+            Remove Employee
+          </Button>
+          <Button variant="danger" size="md" onClick={handleEndSession}>
+            End Session
+          </Button>
+        </div>
       }
     >
       <div className="flex flex-1 overflow-hidden">
@@ -270,6 +323,15 @@ export function LiveSessionPage() {
           </div>
         </section>
       </div>
+
+      {showAddEmployee && (
+        <PrototypeAddEmployeeModal
+          allEmployees={activeEmployees}
+          enrolledEmployeeIds={sessionEmployees.map((employee) => employee.id)}
+          onAdd={handleAddEmployee}
+          onClose={() => setShowAddEmployee(false)}
+        />
+      )}
 
       {editingEntry && editingEmployee && (
         <EditEntryModal

@@ -4,12 +4,14 @@ export interface Facility {
   id: string;
   code: string;
   name: string;
+  active?: boolean;
 }
 
 export interface Room {
   id: string;
   facilityId: string;
   name: string;
+  active?: boolean;
 }
 
 export interface Supervisor {
@@ -89,6 +91,7 @@ export interface Session {
   roomName?: string;
   supervisorId: string;
   supervisorName: string;
+  workType?: string;
   employeeIds: string[];
   employees: SessionEmployeeSnapshot[];
   startedAt: number;
