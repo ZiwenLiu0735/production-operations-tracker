@@ -39,6 +39,7 @@ interface SessionContextValue {
   endSession: () => void;
   resumeSession: () => void;
   clearSession: () => void;
+  reloadFromStorage: () => void;
 }
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -56,11 +57,30 @@ function commitSession(session: Session | null) {
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(loadActiveSession);
 
+  const reloadFromStorage = useCallback(() => {
+    setSession(loadActiveSession());
+  }, []);
+
   useEffect(() => {
     if (navigator.onLine) {
       processSyncQueue();
     }
   }, []);
+
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        reloadFromStorage();
+      }
+    }
+
+    window.addEventListener("focus", reloadFromStorage);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.removeEventListener("focus", reloadFromStorage);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [reloadFromStorage]);
 
   const startSession = useCallback(
     (params: {
@@ -220,6 +240,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       endSession,
       resumeSession,
       clearSession,
+      reloadFromStorage,
     }),
     [
       session,
@@ -233,6 +254,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       endSession,
       resumeSession,
       clearSession,
+      reloadFromStorage,
     ],
   );
 

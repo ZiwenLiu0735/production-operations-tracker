@@ -18,6 +18,11 @@ import { getRecentEntries } from "../utils/export";
 import { getNewestEntry } from "../utils/sessionEntries";
 import { getSessionEmployees } from "../utils/sessionEmployees";
 import { parseWholeWeight } from "../utils/format";
+import {
+  HOURLY_TRACK_PATH,
+  START_SESSION_PATH,
+  SUMMARY_PATH,
+} from "../lib/sessionRoutes";
 
 export function LiveSessionPage() {
   const navigate = useNavigate();
@@ -30,6 +35,7 @@ export function LiveSessionPage() {
     addEmployee,
     removeEmployee,
     endSession,
+    reloadFromStorage,
   } = useSession();
   const { activeEmployees } = useMasterData();
 
@@ -56,16 +62,20 @@ export function LiveSessionPage() {
     sessionEmployees.length > 12 ? "grid-cols-3" : "grid-cols-2";
 
   useEffect(() => {
+    reloadFromStorage();
+  }, [reloadFromStorage]);
+
+  useEffect(() => {
     if (!session) {
-      navigate("/", { replace: true });
+      navigate(START_SESSION_PATH, { replace: true });
       return;
     }
     if (session.workType && session.workType !== "trim") {
-      navigate("/hourly-track", { replace: true });
+      navigate(HOURLY_TRACK_PATH, { replace: true });
       return;
     }
     if (session.endedAt) {
-      navigate("/summary", { replace: true });
+      navigate(SUMMARY_PATH, { replace: true });
       return;
     }
     if (!activeEmployeeId && sessionEmployees.length > 0) {
@@ -97,13 +107,13 @@ export function LiveSessionPage() {
         "Return to session setup? Your entries are saved and you can resume this session.",
       )
     ) {
-      navigate("/");
+      navigate(START_SESSION_PATH);
     }
   }
 
   function handleEndSession() {
     endSession();
-    navigate("/summary");
+    navigate(SUMMARY_PATH);
   }
 
   function handleAddEmployee(employee: (typeof activeEmployees)[number]) {

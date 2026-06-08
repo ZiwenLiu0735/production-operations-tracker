@@ -13,6 +13,11 @@ import { exportRawDataCSV } from "../utils/export";
 import { GrandTotalCard, ProductionStat, SummaryLine } from "../components/WeightSummary";
 import { formatDate, formatDuration, formatWeightWithLbs } from "../utils/format";
 import { getSessionEmployees } from "../utils/sessionEmployees";
+import {
+  HOURLY_TRACK_PATH,
+  START_SESSION_PATH,
+  TRIM_TRACK_LIVE_PATH,
+} from "../lib/sessionRoutes";
 
 export function EndSessionPage() {
   useArchiveRefreshOnMount();
@@ -23,7 +28,7 @@ export function EndSessionPage() {
 
   useEffect(() => {
     if (!session) {
-      navigate("/", { replace: true });
+      navigate(START_SESSION_PATH, { replace: true });
     }
   }, [session, navigate]);
 
@@ -43,12 +48,12 @@ export function EndSessionPage() {
 
   function handleBack() {
     resumeSession();
-    navigate(session?.workType === "trim" ? "/session" : "/hourly-track");
+    navigate(session?.workType === "trim" ? TRIM_TRACK_LIVE_PATH : HOURLY_TRACK_PATH);
   }
 
   function handleNewSession() {
     clearSession();
-    navigate("/");
+    navigate(START_SESSION_PATH);
   }
 
   async function handleEmployeeReceipts() {

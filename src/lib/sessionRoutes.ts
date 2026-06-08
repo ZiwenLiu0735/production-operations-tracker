@@ -1,15 +1,20 @@
+export const START_SESSION_PATH = "/";
+export const TRIM_TRACK_LIVE_PATH = "/trim-track/live";
+export const HOURLY_TRACK_PATH = "/hourly-track";
+export const SUMMARY_PATH = "/summary";
+
 const HOURLY_WORK_TYPES = new Set(["deleaf", "chop", "skirt", "package", "sorting"]);
 
-export function getSessionTrackPath(workType: string, sessionId: string): string {
+export function getSessionTrackPath(workType: string): string {
   if (workType === "trim") {
-    return `/trim-track/${sessionId}`;
+    return TRIM_TRACK_LIVE_PATH;
   }
 
   if (HOURLY_WORK_TYPES.has(workType)) {
-    return `/hourly-track/${sessionId}`;
+    return HOURLY_TRACK_PATH;
   }
 
-  return `/hourly-track/${sessionId}`;
+  return HOURLY_TRACK_PATH;
 }
 
 export function formatWorkTypeLabel(workType: string): string {

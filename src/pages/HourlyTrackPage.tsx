@@ -4,22 +4,31 @@ import { AppNav } from "../components/AppNav";
 import { Layout } from "../components/Layout";
 import { SessionInfoHeader } from "../components/SessionInfoHeader";
 import { useSession } from "../context/SessionContext";
+import {
+  START_SESSION_PATH,
+  SUMMARY_PATH,
+  TRIM_TRACK_LIVE_PATH,
+} from "../lib/sessionRoutes";
 
 export function HourlyTrackPage() {
   const navigate = useNavigate();
-  const { session } = useSession();
+  const { session, reloadFromStorage } = useSession();
+
+  useEffect(() => {
+    reloadFromStorage();
+  }, [reloadFromStorage]);
 
   useEffect(() => {
     if (!session) {
-      navigate("/", { replace: true });
+      navigate(START_SESSION_PATH, { replace: true });
       return;
     }
     if (session.workType === "trim") {
-      navigate("/session", { replace: true });
+      navigate(TRIM_TRACK_LIVE_PATH, { replace: true });
       return;
     }
     if (session.endedAt) {
-      navigate("/summary", { replace: true });
+      navigate(SUMMARY_PATH, { replace: true });
     }
   }, [session, navigate]);
 
@@ -35,7 +44,7 @@ export function HourlyTrackPage() {
     <Layout
       title="Hourly Track"
       subtitle="Live production session"
-      onBack={() => navigate("/")}
+      onBack={() => navigate(START_SESSION_PATH)}
       backLabel="Setup"
       headerCenter={<SessionInfoHeader session={session} compact />}
       headerRight={<AppNav />}

@@ -10,6 +10,12 @@ import { SectionLabel, SelectTile } from "../components/SelectTile";
 import { useMasterData } from "../context/MasterDataContext";
 import { useSession } from "../context/SessionContext";
 import { filterEmployees } from "../utils/employees";
+import {
+  getSessionTrackPath,
+  HOURLY_TRACK_PATH,
+  SUMMARY_PATH,
+  TRIM_TRACK_LIVE_PATH,
+} from "../lib/sessionRoutes";
 
 const WORK_TYPE_OPTIONS = [
   { value: "trim", label: "TRIM" },
@@ -19,10 +25,6 @@ const WORK_TYPE_OPTIONS = [
   { value: "package", label: "PACKAGE" },
   { value: "sorting", label: "SORTING" },
 ];
-
-function getTrackPath(workType: string): string {
-  return workType === "trim" ? "/session" : "/hourly-track";
-}
 
 export function StartSessionPage() {
   const navigate = useNavigate();
@@ -53,7 +55,7 @@ export function StartSessionPage() {
 
   useEffect(() => {
     if (session?.endedAt) {
-      navigate("/summary", { replace: true });
+      navigate(SUMMARY_PATH, { replace: true });
     }
   }, [session, navigate]);
 
@@ -102,18 +104,18 @@ export function StartSessionPage() {
       employees,
     });
 
-    navigate(getTrackPath(workType));
+    navigate(getSessionTrackPath(workType));
   }
 
   const hasActiveSession = session !== null && !session.endedAt;
 
   function handleResume() {
-    navigate(session?.workType === "trim" ? "/session" : "/hourly-track");
+    navigate(session?.workType === "trim" ? TRIM_TRACK_LIVE_PATH : HOURLY_TRACK_PATH);
   }
 
   function handleEndSession() {
     endSession();
-    navigate("/summary");
+    navigate(SUMMARY_PATH);
   }
 
   function handleDeleteSession() {
