@@ -198,13 +198,182 @@ export function LiveSessionPage() {
     ? getEmployeeTotals(activeEmployee.id, activeSession.entries)
     : null;
 
+  const currentEmployeeCard = (
+    <Card
+      size="small"
+      style={{ borderRadius: 12, background: "#1a222d", textAlign: "center" }}
+      styles={{ body: { padding: "12px 16px" } }}
+    >
+      <Text
+        style={{
+          fontSize: 10,
+          fontWeight: 600,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color: "rgba(255,255,255,0.4)",
+        }}
+      >
+        Current Employee
+      </Text>
+      {activeEmployee && (
+        <div style={{ marginTop: 4 }}>
+          <EmployeeIdentity employee={activeEmployee} size="md" align="center" />
+        </div>
+      )}
+      {activeTotals && (
+        <Row gutter={8} style={{ marginTop: 12 }}>
+          <Col span={8}>
+            <Statistic
+              title="Regular"
+              value={activeTotals.regular}
+              suffix="g"
+              valueStyle={{ fontSize: 14, color: "#22c55e" }}
+              className="tt-summary-stat"
+            />
+          </Col>
+          <Col span={8}>
+            <Statistic
+              title="Stick"
+              value={activeTotals.stick}
+              suffix="g"
+              valueStyle={{ fontSize: 14, color: "#f59e0b" }}
+              className="tt-summary-stat"
+            />
+          </Col>
+          <Col span={8}>
+            <Statistic
+              title="Smalls"
+              value={activeTotals.smalls}
+              suffix="g"
+              valueStyle={{ fontSize: 14, color: "#8b5cf6" }}
+              className="tt-summary-stat"
+            />
+          </Col>
+        </Row>
+      )}
+    </Card>
+  );
+
+  const weightEntrySection = (
+    <>
+      <div>
+        <Text
+          style={{
+            display: "block",
+            textAlign: "center",
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.4)",
+            marginBottom: 6,
+          }}
+        >
+          Weight (grams)
+        </Text>
+        <Input
+          ref={inputRef}
+          id="weight-input"
+          className="tt-weight-input"
+          size="large"
+          inputMode="numeric"
+          placeholder="0"
+          value={weight}
+          onChange={(e) => handleWeightChange(e.target.value)}
+          autoFocus
+          style={{ borderRadius: 14, borderWidth: 2 }}
+        />
+      </div>
+
+      <Space direction="vertical" size={10} style={{ width: "100%", marginTop: 12 }}>
+        <CategoryButton
+          label="Regular Trim"
+          variant="regular"
+          flash={flash === "regular"}
+          disabled={parsedWeight === null}
+          onClick={() => handleCategoryClick("regular")}
+        />
+        <CategoryButton
+          label="Stick Trim"
+          variant="stick"
+          flash={flash === "stick"}
+          disabled={parsedWeight === null}
+          onClick={() => handleCategoryClick("stick")}
+        />
+        <CategoryButton
+          label="Smalls"
+          variant="smalls"
+          flash={flash === "smalls"}
+          disabled={parsedWeight === null}
+          onClick={() => handleCategoryClick("smalls")}
+        />
+      </Space>
+    </>
+  );
+
+  const recentEntriesSection = (
+    <Card
+      className="tt-dashboard-panel"
+      title="Recent Entries"
+      size="small"
+      style={{ borderRadius: 12, height: "100%", display: "flex", flexDirection: "column" }}
+      styles={{ body: { flex: 1, minHeight: 0, overflow: "hidden", padding: 8 } }}
+      extra={
+        canUndo ? (
+          <Button
+            size="small"
+            icon={<RollbackOutlined />}
+            onClick={handleUndoClick}
+            style={{
+              borderColor: "rgba(245, 158, 11, 0.5)",
+              background: "rgba(245, 158, 11, 0.15)",
+              color: "#fcd34d",
+            }}
+          >
+            Undo
+          </Button>
+        ) : undefined
+      }
+    >
+      {recentEntries.length === 0 ? (
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No entries yet" />
+      ) : (
+        <div style={{ overflowY: "auto", maxHeight: "100%" }}>
+          <Space direction="vertical" size={6} style={{ width: "100%" }}>
+            {recentEntries.map((entry) => (
+              <Card
+                key={entry.id}
+                size="small"
+                styles={{ body: { padding: "8px 12px" } }}
+                style={{ borderRadius: 8, background: "rgba(15, 20, 25, 0.6)" }}
+              >
+                <Text type="secondary" style={{ fontSize: 10 }}>
+                  {formatTime(entry.timestamp)}
+                </Text>
+                <div>
+                  <Text strong style={{ fontSize: 15 }}>
+                    {formatWeight(entry.weight)}
+                  </Text>
+                  <Text type="secondary" style={{ fontSize: 11, marginLeft: 8 }}>
+                    {categoryLabel(entry.category)}
+                  </Text>
+                </div>
+              </Card>
+            ))}
+          </Space>
+        </div>
+      )}
+    </Card>
+  );
+
   return (
     <Layout
       onBack={handleBack}
       backLabel="Setup"
+      headerLayout="responsive"
       headerCenter={<SessionInfoHeader session={activeSession} compact />}
       headerRight={
-        <Space wrap size="small">
+        <>
           <Button size="large" icon={<UserAddOutlined />} onClick={() => setShowAddEmployee(true)}>
             Add Employee
           </Button>
@@ -219,34 +388,25 @@ export function LiveSessionPage() {
           <Button danger size="large" icon={<StopOutlined />} onClick={handleEndSession}>
             End Session
           </Button>
-        </Space>
+        </>
       }
     >
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left: employee roster */}
-        <div
-          className="flex flex-col"
-          style={{
-            width: "24%",
-            minWidth: 200,
-            maxWidth: 280,
-            borderRight: "1px solid rgba(46, 61, 82, 0.5)",
-            background: "rgba(26, 34, 45, 0.6)",
-          }}
-        >
+      <div className="tt-live-session">
+        {/* Row 1 (portrait) / Left column (landscape): employee roster */}
+        <section className="tt-live-section tt-live-employees">
           <Card
             className="tt-dashboard-panel"
             title="Select Employee"
             bordered={false}
             style={{ height: "100%", borderRadius: 0, background: "transparent" }}
-            styles={{ body: { flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" } }}
+            styles={{ body: { display: "flex", flexDirection: "column", overflow: "hidden" } }}
           >
-            <Row gutter={[6, 6]} style={{ overflowY: "auto", flex: 1, alignContent: "flex-start" }}>
+            <Row gutter={[6, 6]} style={{ alignContent: "flex-start" }}>
               {sessionEmployees.map((employee) => {
                 const totals = getEmployeeTotals(employee.id, activeSession.entries);
                 const isActive = employee.id === activeEmployeeId;
                 return (
-                  <Col key={employee.id} span={24 / gridCols}>
+                  <Col key={employee.id} xs={8} sm={6} lg={24 / gridCols}>
                     <LiveEmployeeCard
                       employee={employee}
                       totals={totals}
@@ -258,189 +418,23 @@ export function LiveSessionPage() {
               })}
             </Row>
           </Card>
+        </section>
+
+        {/* Rows 2–4 (portrait) / Center column (landscape) */}
+        <div className="tt-live-center tt-live-section">
+          <section className="tt-live-current">{currentEmployeeCard}</section>
+          <section className="tt-live-weight">{weightEntrySection}</section>
+          <section className="tt-live-recent">{recentEntriesSection}</section>
         </div>
 
-        {/* Center: entry panel */}
-        <div
-          className="flex flex-col"
-          style={{
-            width: "38%",
-            minWidth: 280,
-            borderRight: "1px solid rgba(46, 61, 82, 0.5)",
-            background: "#0f1419",
-          }}
-        >
-          <div className="flex flex-1 flex-col overflow-hidden p-4 gap-3">
-            <Card
-              size="small"
-              style={{ borderRadius: 12, background: "#1a222d", textAlign: "center" }}
-              styles={{ body: { padding: "12px 16px" } }}
-            >
-              <Text
-                style={{
-                  fontSize: 10,
-                  fontWeight: 600,
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.4)",
-                }}
-              >
-                Current Employee
-              </Text>
-              {activeEmployee && (
-                <div style={{ marginTop: 4 }}>
-                  <EmployeeIdentity employee={activeEmployee} size="md" align="center" />
-                </div>
-              )}
-              {activeTotals && (
-                <Row gutter={8} style={{ marginTop: 12 }}>
-                  <Col span={8}>
-                    <Statistic
-                      title="Regular"
-                      value={activeTotals.regular}
-                      suffix="g"
-                      valueStyle={{ fontSize: 14, color: "#22c55e" }}
-                      className="tt-summary-stat"
-                    />
-                  </Col>
-                  <Col span={8}>
-                    <Statistic
-                      title="Stick"
-                      value={activeTotals.stick}
-                      suffix="g"
-                      valueStyle={{ fontSize: 14, color: "#f59e0b" }}
-                      className="tt-summary-stat"
-                    />
-                  </Col>
-                  <Col span={8}>
-                    <Statistic
-                      title="Smalls"
-                      value={activeTotals.smalls}
-                      suffix="g"
-                      valueStyle={{ fontSize: 14, color: "#8b5cf6" }}
-                      className="tt-summary-stat"
-                    />
-                  </Col>
-                </Row>
-              )}
-            </Card>
-
-            <div>
-              <Text
-                style={{
-                  display: "block",
-                  textAlign: "center",
-                  fontSize: 10,
-                  fontWeight: 600,
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.4)",
-                  marginBottom: 6,
-                }}
-              >
-                Weight (grams)
-              </Text>
-              <Input
-                ref={inputRef}
-                id="weight-input"
-                className="tt-weight-input"
-                size="large"
-                inputMode="numeric"
-                placeholder="0"
-                value={weight}
-                onChange={(e) => handleWeightChange(e.target.value)}
-                autoFocus
-                style={{ borderRadius: 14, borderWidth: 2 }}
-              />
-            </div>
-
-            <Space direction="vertical" size={10} style={{ width: "100%" }}>
-              <CategoryButton
-                label="Regular Trim"
-                variant="regular"
-                flash={flash === "regular"}
-                disabled={parsedWeight === null}
-                onClick={() => handleCategoryClick("regular")}
-              />
-              <CategoryButton
-                label="Stick Trim"
-                variant="stick"
-                flash={flash === "stick"}
-                disabled={parsedWeight === null}
-                onClick={() => handleCategoryClick("stick")}
-              />
-              <CategoryButton
-                label="Smalls"
-                variant="smalls"
-                flash={flash === "smalls"}
-                disabled={parsedWeight === null}
-                onClick={() => handleCategoryClick("smalls")}
-              />
-            </Space>
-
-            <Card
-              className="tt-dashboard-panel"
-              title="Recent Entries"
-              size="small"
-              style={{ flex: 1, minHeight: 0, borderRadius: 12, display: "flex", flexDirection: "column" }}
-              styles={{ body: { flex: 1, minHeight: 0, overflow: "hidden", padding: 8 } }}
-              extra={
-                canUndo ? (
-                  <Button
-                    size="small"
-                    icon={<RollbackOutlined />}
-                    onClick={handleUndoClick}
-                    style={{
-                      borderColor: "rgba(245, 158, 11, 0.5)",
-                      background: "rgba(245, 158, 11, 0.15)",
-                      color: "#fcd34d",
-                    }}
-                  >
-                    Undo
-                  </Button>
-                ) : undefined
-              }
-            >
-              {recentEntries.length === 0 ? (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No entries yet" />
-              ) : (
-                <div style={{ overflowY: "auto", maxHeight: "100%" }}>
-                  <Space direction="vertical" size={6} style={{ width: "100%" }}>
-                    {recentEntries.map((entry) => (
-                      <Card
-                        key={entry.id}
-                        size="small"
-                        styles={{ body: { padding: "8px 12px" } }}
-                        style={{ borderRadius: 8, background: "rgba(15, 20, 25, 0.6)" }}
-                      >
-                        <Text type="secondary" style={{ fontSize: 10 }}>
-                          {formatTime(entry.timestamp)}
-                        </Text>
-                        <div>
-                          <Text strong style={{ fontSize: 15 }}>
-                            {formatWeight(entry.weight)}
-                          </Text>
-                          <Text type="secondary" style={{ fontSize: 11, marginLeft: 8 }}>
-                            {categoryLabel(entry.category)}
-                          </Text>
-                        </div>
-                      </Card>
-                    ))}
-                  </Space>
-                </div>
-              )}
-            </Card>
-          </div>
-        </div>
-
-        {/* Right: production breakdown */}
-        <div className="flex flex-1 flex-col overflow-hidden" style={{ background: "rgba(15, 20, 25, 0.85)" }}>
+        {/* Row 5 (portrait) / Right column (landscape): production breakdown */}
+        <section className="tt-live-section tt-live-breakdown">
           <Card
             className="tt-dashboard-panel"
             title="Production Breakdown"
             bordered={false}
             style={{ height: "100%", borderRadius: 0, background: "transparent" }}
-            styles={{ body: { flex: 1, overflow: "auto", padding: 16 } }}
+            styles={{ body: { padding: 16 } }}
           >
             {activeEmployee ? (
               <LiveEmployeeBreakdown
@@ -453,7 +447,7 @@ export function LiveSessionPage() {
               <Empty description="Select an employee to view breakdown" />
             )}
           </Card>
-        </div>
+        </section>
       </div>
 
       {showAddEmployee && (
@@ -583,61 +577,64 @@ function LiveEmployeeBreakdown({
           <Card
             key={category}
             size="small"
+            className="tt-category-panel"
             title={CATEGORY_LABELS[category]}
             style={{
               borderRadius: 12,
               borderLeft: `3px solid ${CATEGORY_COLORS[category]}`,
             }}
-            styles={{ body: { padding: "10px 14px" } }}
           >
-            {categoryEntries.length > 0 ? (
-              <Space direction="vertical" size={4} style={{ width: "100%" }}>
-                {categoryEntries.map((entry) => (
-                  <div
-                    key={entry.id}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "6px 10px",
-                      borderRadius: 8,
-                      background: "rgba(15, 20, 25, 0.6)",
-                    }}
-                  >
-                    <div>
-                      <Text strong style={{ fontSize: 14 }}>
-                        {formatWeight(entry.weight)}
-                      </Text>
-                      <Text type="secondary" style={{ display: "block", fontSize: 10 }}>
-                        {formatTime(entry.timestamp)}
-                      </Text>
+            <div className="tt-category-entries-scroll">
+              {categoryEntries.length > 0 ? (
+                <Space direction="vertical" size={4} style={{ width: "100%" }}>
+                  {categoryEntries.map((entry) => (
+                    <div
+                      key={entry.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 8,
+                        padding: "6px 10px",
+                        borderRadius: 8,
+                        background: "rgba(15, 20, 25, 0.6)",
+                      }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <Text strong style={{ fontSize: 14 }}>
+                          {formatWeight(entry.weight)}
+                        </Text>
+                        <Text type="secondary" style={{ display: "block", fontSize: 10 }}>
+                          {formatTime(entry.timestamp)}
+                        </Text>
+                      </div>
+                      <Space size={4} wrap>
+                        <Button size="small" onClick={() => onEdit(entry)}>
+                          Edit
+                        </Button>
+                        <Button size="small" danger onClick={() => onDelete(entry.id)}>
+                          Delete
+                        </Button>
+                      </Space>
                     </div>
-                    <Space size={4}>
-                      <Button size="small" onClick={() => onEdit(entry)}>
-                        Edit
-                      </Button>
-                      <Button size="small" danger onClick={() => onDelete(entry.id)}>
-                        Delete
-                      </Button>
-                    </Space>
-                  </div>
-                ))}
-              </Space>
-            ) : (
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                No entries
-              </Text>
-            )}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginTop: 10,
-                paddingTop: 8,
-                borderTop: "1px solid rgba(46, 61, 82, 0.5)",
-              }}
-            >
-              <Text style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)" }}>
+                  ))}
+                </Space>
+              ) : (
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  No entries
+                </Text>
+              )}
+            </div>
+            <div className="tt-category-subtotal">
+              <Text
+                style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.5)",
+                }}
+              >
                 Subtotal
               </Text>
               <Text strong style={{ fontSize: 14 }}>
