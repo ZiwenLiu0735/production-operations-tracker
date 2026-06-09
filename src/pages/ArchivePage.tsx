@@ -33,7 +33,7 @@ export function ArchivePage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by employee ID, name, date, or facility…"
-            className="w-full max-w-3xl rounded-xl border-2 border-surface-600 bg-surface-800 px-4 py-3 text-base text-white outline-none placeholder:text-white/30 focus:border-brand-500"
+            className="tt-input max-w-3xl"
           />
           <label className="flex items-center gap-2 text-sm text-white/50">
             <input
@@ -62,11 +62,7 @@ export function ArchivePage() {
                 return (
                   <div
                     key={session.id}
-                    className={`rounded-xl border bg-surface-800 p-4 ${
-                      isDeleted
-                        ? "border-red-500/30 opacity-70"
-                        : "border-surface-600"
-                    }`}
+                    className={`tt-archive-card ${isDeleted ? "tt-archive-card--deleted" : ""}`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">

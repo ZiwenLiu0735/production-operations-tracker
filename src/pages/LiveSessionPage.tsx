@@ -31,10 +31,10 @@ import {
 
 const { Text } = Typography;
 
-const CATEGORY_COLORS: Record<TrimCategory, string> = {
-  regular: "#22c55e",
-  stick: "#f59e0b",
-  smalls: "#8b5cf6",
+const CATEGORY_CLASS: Record<TrimCategory, string> = {
+  regular: "tt-cat-regular",
+  stick: "tt-cat-stick",
+  smalls: "tt-cat-smalls",
 };
 
 export function LiveSessionPage() {
@@ -201,20 +201,10 @@ export function LiveSessionPage() {
   const currentEmployeeCard = (
     <Card
       size="small"
-      style={{ borderRadius: 12, background: "#1a222d", textAlign: "center" }}
+      className={`tt-live-current-card ${activeEmployee ? "tt-live-current-card--active" : ""}`}
       styles={{ body: { padding: "12px 16px" } }}
     >
-      <Text
-        style={{
-          fontSize: 10,
-          fontWeight: 600,
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          color: "rgba(255,255,255,0.4)",
-        }}
-      >
-        Current Employee
-      </Text>
+      <p className="tt-section-label text-center">Current Employee</p>
       {activeEmployee && (
         <div style={{ marginTop: 4 }}>
           <EmployeeIdentity employee={activeEmployee} size="md" align="center" />
@@ -227,7 +217,7 @@ export function LiveSessionPage() {
               title="Regular"
               value={activeTotals.regular}
               suffix="g"
-              valueStyle={{ fontSize: 14, color: "#22c55e" }}
+              valueStyle={{ fontSize: 14, color: "#34d399" }}
               className="tt-summary-stat"
             />
           </Col>
@@ -236,7 +226,7 @@ export function LiveSessionPage() {
               title="Stick"
               value={activeTotals.stick}
               suffix="g"
-              valueStyle={{ fontSize: 14, color: "#f59e0b" }}
+              valueStyle={{ fontSize: 14, color: "#fbbf24" }}
               className="tt-summary-stat"
             />
           </Col>
@@ -245,7 +235,7 @@ export function LiveSessionPage() {
               title="Smalls"
               value={activeTotals.smalls}
               suffix="g"
-              valueStyle={{ fontSize: 14, color: "#8b5cf6" }}
+              valueStyle={{ fontSize: 14, color: "#a78bfa" }}
               className="tt-summary-stat"
             />
           </Col>
@@ -257,20 +247,7 @@ export function LiveSessionPage() {
   const weightEntrySection = (
     <>
       <div>
-        <Text
-          style={{
-            display: "block",
-            textAlign: "center",
-            fontSize: 10,
-            fontWeight: 600,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            color: "rgba(255,255,255,0.4)",
-            marginBottom: 6,
-          }}
-        >
-          Weight (grams)
-        </Text>
+      <p className="tt-section-label mb-1.5 text-center">Weight (grams)</p>
         <Input
           ref={inputRef}
           id="weight-input"
@@ -281,7 +258,7 @@ export function LiveSessionPage() {
           value={weight}
           onChange={(e) => handleWeightChange(e.target.value)}
           autoFocus
-          style={{ borderRadius: 14, borderWidth: 2 }}
+          style={{ borderRadius: 14 }}
         />
       </div>
 
@@ -484,14 +461,7 @@ export function LiveSessionPage() {
       )}
 
       {toast && (
-        <div
-          className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl border px-5 py-3 text-sm font-semibold shadow-lg"
-          style={{
-            borderColor: "rgba(34, 197, 94, 0.4)",
-            background: "#1a222d",
-            color: "#86efac",
-          }}
-        >
+        <div className="tt-toast fixed bottom-6 left-1/2 z-50 -translate-x-1/2 px-5 py-3 text-sm font-semibold">
           {toast}
         </div>
       )}
@@ -518,17 +488,12 @@ function LiveEmployeeCard({
       hoverable
       onClick={onClick}
       size="small"
-      className={`tt-select-card ${isActive ? "tt-employee-card--active" : ""}`}
+      className={`tt-select-card tt-surface-card ${isActive ? "tt-employee-card--active" : ""}`}
       styles={{ body: { padding: "8px 10px" } }}
-      style={{
-        borderRadius: 10,
-        border: "1px solid #2e3d52",
-        background: isActive ? undefined : "#1a222d",
-        width: "100%",
-      }}
+      style={{ width: "100%" }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 4 }}>
-        <Text strong style={{ color: "#4ade80", fontSize: 13 }}>
+        <Text strong className="text-brand-400" style={{ fontSize: 13 }}>
           {formatEmployeeId(employee.employeeNumber)}
         </Text>
         <Text strong style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
@@ -577,29 +542,18 @@ function LiveEmployeeBreakdown({
           <Card
             key={category}
             size="small"
-            className="tt-category-panel"
+            className={`tt-category-panel ${CATEGORY_CLASS[category]}`}
             title={CATEGORY_LABELS[category]}
             style={{
-              borderRadius: 12,
-              borderLeft: `3px solid ${CATEGORY_COLORS[category]}`,
+              borderRadius: 14,
+              borderLeft: "3px solid var(--tt-cat-color)",
             }}
           >
             <div className="tt-category-entries-scroll">
               {categoryEntries.length > 0 ? (
                 <Space direction="vertical" size={4} style={{ width: "100%" }}>
                   {categoryEntries.map((entry) => (
-                    <div
-                      key={entry.id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 8,
-                        padding: "6px 10px",
-                        borderRadius: 8,
-                        background: "rgba(15, 20, 25, 0.6)",
-                      }}
-                    >
+                    <div key={entry.id} className="tt-entry-row">
                       <div style={{ minWidth: 0 }}>
                         <Text strong style={{ fontSize: 14 }}>
                           {formatWeight(entry.weight)}
@@ -645,20 +599,12 @@ function LiveEmployeeBreakdown({
         );
       })}
 
-      <Card
-        size="small"
-        style={{
-          borderRadius: 12,
-          border: "2px solid #22c55e",
-          background: "linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(34, 197, 94, 0.04) 100%)",
-        }}
-        styles={{ body: { padding: "12px 16px" } }}
-      >
+      <Card size="small" className="tt-category-total-card" styles={{ body: { padding: "12px 16px" } }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
           <Text strong style={{ fontSize: 14, letterSpacing: "0.06em" }}>
             TOTAL
           </Text>
-          <Text strong style={{ fontSize: 20, color: "#4ade80" }}>
+          <Text strong className="text-brand-400" style={{ fontSize: 20 }}>
             {formatWeightWithLbs(grandTotal)}
           </Text>
         </div>
@@ -686,18 +632,7 @@ function CategoryButton({
       size="large"
       disabled={disabled}
       onClick={onClick}
-      className={flash ? "tt-category-btn--flash" : ""}
-      style={{
-        height: 56,
-        fontSize: 16,
-        fontWeight: 700,
-        borderRadius: 14,
-        background: CATEGORY_COLORS[variant],
-        borderColor: CATEGORY_COLORS[variant],
-        color: "#fff",
-        opacity: disabled ? 0.4 : 1,
-        transition: "transform 0.15s ease, filter 0.15s ease",
-      }}
+      className={`tt-category-btn ${CATEGORY_CLASS[variant]} ${flash ? "tt-category-btn--flash" : ""}`}
     >
       {label}
     </Button>

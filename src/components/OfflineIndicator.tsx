@@ -7,10 +7,10 @@ export function OfflineIndicator() {
 
   return (
     <div
-      className={`shrink-0 border-b px-4 py-2 text-center text-xs font-semibold ${
+      className={`shrink-0 border-b px-4 py-2.5 text-center text-xs font-semibold tracking-wide ${
         isOnline
-          ? "border-brand-500/30 bg-brand-600/10 text-brand-300"
-          : "border-amber-500/30 bg-amber-600/10 text-amber-200"
+          ? "border-brand-500/25 bg-brand-600/8 text-brand-300"
+          : "border-amber-500/25 bg-amber-600/8 text-amber-200"
       }`}
     >
       {isOnline

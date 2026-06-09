@@ -10,8 +10,8 @@ export function SettingsPanel({ title, description, children }: SettingsPanelPro
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg font-bold text-white">{title}</h2>
-        {description && <p className="mt-1 text-sm text-white/50">{description}</p>}
+        <h2 className="text-lg font-semibold tracking-tight text-white">{title}</h2>
+        {description && <p className="mt-1 text-sm text-white/55">{description}</p>}
       </div>
       {children}
     </div>
@@ -27,16 +27,13 @@ interface SettingsFieldProps {
 export function SettingsField({ label, children, className = "" }: SettingsFieldProps) {
   return (
     <label className={`block ${className}`}>
-      <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/40">
-        {label}
-      </span>
+      <span className="tt-section-label mb-1.5 block">{label}</span>
       {children}
     </label>
   );
 }
 
-export const inputClass =
-  "w-full rounded-xl border-2 border-surface-600 bg-surface-800 px-4 py-3 text-base text-white outline-none focus:border-brand-500";
+export const inputClass = "tt-input";
 
 export const selectClass = inputClass;
 
@@ -45,9 +42,7 @@ interface SettingsCardProps {
 }
 
 export function SettingsCard({ children }: SettingsCardProps) {
-  return (
-    <div className="rounded-xl border border-surface-600 bg-surface-800 p-4">{children}</div>
-  );
+  return <div className="tt-settings-card">{children}</div>;
 }
 
 interface ActiveToggleProps {
@@ -60,7 +55,7 @@ export function ActiveToggle({ active, onChange }: ActiveToggleProps) {
     <button
       type="button"
       onClick={() => onChange(!active)}
-      className={`min-h-10 rounded-lg px-4 text-sm font-semibold touch-manipulation ${
+      className={`min-h-10 rounded-lg px-4 text-sm font-semibold transition-colors touch-manipulation ${
         active
           ? "bg-brand-600/20 text-brand-400"
           : "bg-surface-700 text-white/40"

@@ -16,13 +16,11 @@ export function SessionInfoHeader({ session, compact = false }: SessionInfoHeade
 
   if (compact) {
     return (
-      <div className="tt-session-info grid grid-cols-2 gap-x-4 gap-y-2 lg:grid-cols-4">
+      <div className="tt-session-info grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
         {items.map((item) => (
-          <div key={item.label} className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
-              {item.label}
-            </p>
-            <p className="truncate text-sm font-semibold text-white">{item.value}</p>
+          <div key={item.label} className="tt-info-chip min-w-0">
+            <p className="tt-info-chip__label">{item.label}</p>
+            <p className="tt-info-chip__value truncate">{item.value}</p>
           </div>
         ))}
       </div>
@@ -32,14 +30,9 @@ export function SessionInfoHeader({ session, compact = false }: SessionInfoHeade
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {items.map((item) => (
-        <div
-          key={item.label}
-          className="rounded-xl border border-surface-600/50 bg-surface-800/60 px-3 py-2"
-        >
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
-            {item.label}
-          </p>
-          <p className="mt-0.5 truncate text-sm font-semibold text-white">{item.value}</p>
+        <div key={item.label} className="tt-info-chip min-w-0">
+          <p className="tt-info-chip__label">{item.label}</p>
+          <p className="tt-info-chip__value truncate">{item.value}</p>
         </div>
       ))}
     </div>

@@ -12,9 +12,9 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "bg-brand-600 text-white hover:bg-brand-500 active:bg-brand-700 disabled:bg-surface-600 disabled:text-white/40",
+    "bg-brand-500 text-surface-900 hover:bg-brand-400 active:bg-brand-600 disabled:bg-surface-600 disabled:text-white/40 shadow-sm",
   secondary:
-    "bg-surface-600 text-white hover:bg-surface-500 active:bg-surface-700 disabled:bg-surface-700 disabled:text-white/40",
+    "border border-white/10 bg-surface-700 text-white hover:bg-surface-600 active:bg-surface-800 disabled:bg-surface-800 disabled:text-white/40",
   danger:
     "bg-red-600 text-white hover:bg-red-500 active:bg-red-700 disabled:bg-surface-600 disabled:text-white/40",
   regular:
@@ -45,7 +45,7 @@ export function Button({
   return (
     <button
       type={type}
-      className={`inline-flex cursor-pointer items-center justify-center gap-2 transition-all duration-150 select-none touch-manipulation
+      className={`inline-flex cursor-pointer items-center justify-center gap-2 transition-all duration-[220ms] ease-out select-none touch-manipulation
         ${variantClasses[variant]} ${sizeClasses[size]}
         ${fullWidth ? "w-full" : ""}
         disabled:pointer-events-none disabled:opacity-50

@@ -12,23 +12,23 @@ interface EmployeeIdentityProps {
 const sizeClasses = {
   sm: {
     id: "text-xl font-bold",
-    name: "text-sm font-medium",
-    nick: "text-xs text-white/50",
+    name: "text-sm font-semibold",
+    nick: "text-xs",
   },
   card: {
     id: "text-2xl font-bold",
     name: "text-base font-semibold",
-    nick: "text-sm text-white/50",
+    nick: "text-sm",
   },
   md: {
     id: "text-2xl font-bold",
     name: "text-base font-semibold",
-    nick: "text-sm text-white/50",
+    nick: "text-sm",
   },
   lg: {
     id: "text-4xl font-bold",
     name: "text-2xl font-semibold",
-    nick: "text-lg text-white/50",
+    nick: "text-lg",
   },
 };
 
@@ -45,21 +45,21 @@ export function EmployeeIdentity({
   if (inlineName) {
     return (
       <div className={alignClass}>
-        <p className={`tabular-nums text-brand-400 ${classes.id}`}>
+        <p className={`tt-employee-id ${classes.id}`}>
           {formatEmployeeId(employee.employeeNumber)}
         </p>
-        <p className={`text-white ${classes.name}`}>{employeeDisplayName(employee)}</p>
+        <p className={`tt-employee-name ${classes.name}`}>{employeeDisplayName(employee)}</p>
       </div>
     );
   }
 
   return (
     <div className={alignClass}>
-      <p className={`tabular-nums text-brand-400 ${classes.id}`}>
+      <p className={`tt-employee-id ${classes.id}`}>
         {formatEmployeeId(employee.employeeNumber)}
       </p>
-      <p className={`text-white ${classes.name}`}>{employee.legalName}</p>
-      {nick && <p className={classes.nick}>({nick})</p>}
+      <p className={`tt-employee-name ${classes.name}`}>{employee.legalName}</p>
+      {nick && <p className={`tt-employee-nick ${classes.nick}`}>({nick})</p>}
     </div>
   );
 }

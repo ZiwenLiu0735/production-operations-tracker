@@ -3,7 +3,7 @@ import {
   SearchOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
-import { Badge, Button, Card, Col, Empty, Input, Row, Typography } from "antd";
+import { Badge, Button, Card, Col, Empty, Input, Row } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ActiveSessionFound } from "../components/ActiveSessionFound";
@@ -21,7 +21,6 @@ import {
   TRIM_TRACK_LIVE_PATH,
 } from "../lib/sessionRoutes";
 
-const { Text } = Typography;
 
 const WORK_TYPE_OPTIONS = [
   { value: "trim", label: "TRIM" },
@@ -43,25 +42,10 @@ function SectionCard({
 }) {
   return (
     <Card
-      title={
-        <Text
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            color: "rgba(255,255,255,0.5)",
-          }}
-        >
-          {title}
-        </Text>
-      }
+      className="tt-section-card"
+      title={<span className="tt-section-label">{title}</span>}
       extra={extra}
-      styles={{
-        header: { borderBottom: "1px solid rgba(46, 61, 82, 0.5)", minHeight: 48 },
-        body: { padding: 16 },
-      }}
-      style={{ borderRadius: 16 }}
+      styles={{ body: { padding: 16 } }}
     >
       {children}
     </Card>
@@ -81,19 +65,14 @@ function SelectCard({
     <Card
       hoverable
       onClick={onClick}
-      className={`tt-select-card ${selected ? "tt-select-card--active" : ""}`}
+      className={`tt-select-card tt-surface-card ${selected ? "tt-select-card--active" : ""}`}
       styles={{ body: { padding: "14px 16px", minHeight: 52 } }}
-      style={{
-        borderRadius: 12,
-        border: "2px solid #2e3d52",
-        background: selected ? undefined : "#1a222d",
-      }}
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-        <Text strong style={{ fontSize: 15, color: selected ? "#fff" : "rgba(255,255,255,0.85)" }}>
+        <span className={`text-[15px] font-semibold ${selected ? "text-white" : "text-white/85"}`}>
           {label}
-        </Text>
-        {selected && <CheckCircleFilled style={{ color: "#22c55e", fontSize: 18 }} />}
+        </span>
+        {selected && <CheckCircleFilled className="text-brand-400" style={{ fontSize: 18 }} />}
       </div>
     </Card>
   );
@@ -324,14 +303,9 @@ export function StartSessionPage() {
                         <Card
                           hoverable
                           onClick={() => toggleEmployee(employee.id)}
-                          className={`tt-select-card ${selected ? "tt-select-card--active" : ""}`}
+                          className={`tt-select-card tt-surface-card ${selected ? "tt-select-card--active" : ""}`}
                           styles={{ body: { padding: 14 } }}
-                          style={{
-                            borderRadius: 12,
-                            border: "2px solid #2e3d52",
-                            background: selected ? undefined : "#1a222d",
-                            height: "100%",
-                          }}
+                          style={{ height: "100%" }}
                         >
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                             <EmployeeIdentity employee={employee} size="sm" />
@@ -349,13 +323,7 @@ export function StartSessionPage() {
           </div>
         </div>
 
-        <div
-          className="relative z-10 shrink-0 px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
-          style={{
-            borderTop: "1px solid rgba(46, 61, 82, 0.5)",
-            background: "linear-gradient(180deg, transparent 0%, #0f1419 20%)",
-          }}
-        >
+        <div className="relative z-10 shrink-0 border-t border-white/6 bg-surface-900/95 px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm">
           <div className="mx-auto w-full max-w-3xl">
             <Button
               type="primary"

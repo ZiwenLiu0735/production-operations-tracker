@@ -33,12 +33,12 @@ import {
   TRIM_TRACK_LIVE_PATH,
 } from "../lib/sessionRoutes";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const CATEGORY_COLORS = {
-  regular: "#22c55e",
-  stick: "#f59e0b",
-  smalls: "#8b5cf6",
+  regular: "#34d399",
+  stick: "#fbbf24",
+  smalls: "#a78bfa",
 };
 
 export function EndSessionPage() {
@@ -139,20 +139,18 @@ export function EndSessionPage() {
             showIcon
             message="Production session completed"
             description="Review totals below and export reports for payroll handoff."
+            className="mb-6"
             style={{
-              marginBottom: 24,
-              borderRadius: 14,
-              background: "linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.03) 100%)",
-              border: "1px solid rgba(34, 197, 94, 0.3)",
+              borderRadius: 18,
+              background: "linear-gradient(160deg, rgba(52, 211, 153, 0.1) 0%, rgba(52, 211, 153, 0.02) 100%)",
+              border: "1px solid rgba(52, 211, 153, 0.25)",
             }}
           />
 
-          <Title level={5} style={{ marginBottom: 12, color: "rgba(255,255,255,0.4)", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600 }}>
-            Session Overview
-          </Title>
+          <p className="tt-section-label mb-3">Session Overview</p>
           <Row gutter={[12, 12]} style={{ marginBottom: 24 }}>
             <Col xs={12} sm={6}>
-              <Card size="small" style={{ borderRadius: 14, height: "100%" }}>
+              <Card size="small" className="tt-surface-card" style={{ height: "100%" }}>
                 <Statistic
                   title="Session Date"
                   value={formatDate(session.startedAt)}
@@ -162,7 +160,7 @@ export function EndSessionPage() {
               </Card>
             </Col>
             <Col xs={12} sm={6}>
-              <Card size="small" style={{ borderRadius: 14, height: "100%" }}>
+              <Card size="small" className="tt-surface-card" style={{ height: "100%" }}>
                 <Statistic
                   title="Duration"
                   value={formatDuration(session.startedAt, sessionEndedAt)}
@@ -172,7 +170,7 @@ export function EndSessionPage() {
               </Card>
             </Col>
             <Col xs={12} sm={6}>
-              <Card size="small" style={{ borderRadius: 14, height: "100%" }}>
+              <Card size="small" className="tt-surface-card" style={{ height: "100%" }}>
                 <Statistic
                   title="Total Entries"
                   value={session.entries.length}
@@ -182,19 +180,11 @@ export function EndSessionPage() {
               </Card>
             </Col>
             <Col xs={12} sm={6}>
-              <Card
-                size="small"
-                style={{
-                  borderRadius: 14,
-                  height: "100%",
-                  border: "1px solid rgba(34, 197, 94, 0.35)",
-                  background: "linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(34, 197, 94, 0.04) 100%)",
-                }}
-              >
+              <Card size="small" className="tt-stat-card tt-stat-card--highlight" style={{ height: "100%" }}>
                 <Statistic
                   title="Grand Total"
                   value={formatWeight(sessionGrandTotal)}
-                  valueStyle={{ fontSize: 20, fontWeight: 700, color: "#4ade80" }}
+                  valueStyle={{ fontSize: 20, fontWeight: 700, color: "#34d399" }}
                   className="tt-summary-stat"
                 />
                 <Text type="secondary" style={{ fontSize: 13, fontWeight: 600 }}>
@@ -204,15 +194,10 @@ export function EndSessionPage() {
             </Col>
           </Row>
 
-          <Title level={5} style={{ marginBottom: 12, color: "rgba(255,255,255,0.4)", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600 }}>
-            Category Breakdown
-          </Title>
+          <p className="tt-section-label mb-3">Category Breakdown</p>
           <Row gutter={[12, 12]} style={{ marginBottom: 28 }}>
             <Col xs={24} sm={8}>
-              <Card
-                size="small"
-                style={{ borderRadius: 14, borderTop: `3px solid ${CATEGORY_COLORS.regular}` }}
-              >
+              <Card size="small" className="tt-stat-card tt-stat-card--trim">
                 <Statistic
                   title="Regular Trim"
                   value={sessionTotals.regular}
@@ -226,10 +211,7 @@ export function EndSessionPage() {
               </Card>
             </Col>
             <Col xs={24} sm={8}>
-              <Card
-                size="small"
-                style={{ borderRadius: 14, borderTop: `3px solid ${CATEGORY_COLORS.stick}` }}
-              >
+              <Card size="small" className="tt-stat-card tt-stat-card--stick">
                 <Statistic
                   title="Stick Trim"
                   value={sessionTotals.stick}
@@ -243,10 +225,7 @@ export function EndSessionPage() {
               </Card>
             </Col>
             <Col xs={24} sm={8}>
-              <Card
-                size="small"
-                style={{ borderRadius: 14, borderTop: `3px solid ${CATEGORY_COLORS.smalls}` }}
-              >
+              <Card size="small" className="tt-stat-card tt-stat-card--smalls">
                 <Statistic
                   title="Smalls"
                   value={sessionTotals.smalls}
@@ -263,9 +242,7 @@ export function EndSessionPage() {
 
           <Divider style={{ borderColor: "rgba(46, 61, 82, 0.5)", margin: "0 0 20px" }} />
 
-          <Title level={5} style={{ marginBottom: 12, color: "rgba(255,255,255,0.4)", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600 }}>
-            Employee Summary
-          </Title>
+          <p className="tt-section-label mb-3">Employee Summary</p>
           <Row gutter={[12, 12]} style={{ marginBottom: 28 }}>
             {sortedEmployees.map((employee) => {
               const totals = getEmployeeTotals(employee.id, session.entries);
@@ -333,9 +310,7 @@ export function EndSessionPage() {
 
           <Divider style={{ borderColor: "rgba(46, 61, 82, 0.5)", margin: "0 0 20px" }} />
 
-          <Title level={5} style={{ marginBottom: 12, color: "rgba(255,255,255,0.4)", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600 }}>
-            Export Reports
-          </Title>
+          <p className="tt-section-label mb-3">Export Reports</p>
           <Card
             style={{ borderRadius: 14, marginBottom: 16 }}
             styles={{ body: { padding: 20 } }}

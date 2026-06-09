@@ -1,5 +1,5 @@
 import { PlayCircleOutlined, StopOutlined, DeleteOutlined } from "@ant-design/icons";
-import { Alert, Button, Card, Col, Row, Space, Statistic, Typography } from "antd";
+import { Alert, Button, Col, Row, Space, Typography } from "antd";
 import type { Session } from "../types";
 import { formatTime } from "../utils/format";
 
@@ -20,52 +20,41 @@ export function ActiveSessionFound({
     <Alert
       type="success"
       showIcon
+      className="tt-active-session-alert"
       message={
-        <Typography.Text strong style={{ fontSize: 16, color: "rgba(255,255,255,0.92)" }}>
+        <Typography.Text strong className="text-base text-white/90">
           Active Session Found
         </Typography.Text>
       }
       description={
-        <div style={{ marginTop: 8 }}>
-          <Typography.Text type="secondary">
+        <div className="mt-2">
+          <Typography.Text className="text-white/55">
             {session.entries.length} entr{session.entries.length === 1 ? "y" : "ies"} recorded ·
             started {formatTime(session.startedAt)}
           </Typography.Text>
 
-          <Row gutter={[12, 12]} style={{ marginTop: 16 }}>
+          <Row gutter={[10, 10]} className="mt-4">
             <Col xs={12} sm={8}>
-              <Card size="small" styles={{ body: { padding: "10px 12px" } }}>
-                <Statistic
-                  title="Facility"
-                  value={session.facilityName}
-                  valueStyle={{ fontSize: 14, fontWeight: 600 }}
-                  className="tt-summary-stat"
-                />
-              </Card>
+              <div className="tt-info-chip">
+                <p className="tt-info-chip__label">Facility</p>
+                <p className="tt-info-chip__value truncate">{session.facilityName}</p>
+              </div>
             </Col>
             <Col xs={12} sm={8}>
-              <Card size="small" styles={{ body: { padding: "10px 12px" } }}>
-                <Statistic
-                  title="Room"
-                  value={session.roomName ?? "—"}
-                  valueStyle={{ fontSize: 14, fontWeight: 600 }}
-                  className="tt-summary-stat"
-                />
-              </Card>
+              <div className="tt-info-chip">
+                <p className="tt-info-chip__label">Room</p>
+                <p className="tt-info-chip__value truncate">{session.roomName ?? "—"}</p>
+              </div>
             </Col>
             <Col xs={12} sm={8}>
-              <Card size="small" styles={{ body: { padding: "10px 12px" } }}>
-                <Statistic
-                  title="Supervisor"
-                  value={session.supervisorName}
-                  valueStyle={{ fontSize: 14, fontWeight: 600 }}
-                  className="tt-summary-stat"
-                />
-              </Card>
+              <div className="tt-info-chip">
+                <p className="tt-info-chip__label">Supervisor</p>
+                <p className="tt-info-chip__value truncate">{session.supervisorName}</p>
+              </div>
             </Col>
           </Row>
 
-          <Space wrap style={{ marginTop: 16 }}>
+          <Space wrap className="mt-4">
             <Button type="primary" size="large" icon={<PlayCircleOutlined />} onClick={onResume}>
               Resume Session
             </Button>
@@ -79,9 +68,9 @@ export function ActiveSessionFound({
         </div>
       }
       style={{
-        background: "linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(34, 197, 94, 0.04) 100%)",
-        border: "1px solid rgba(34, 197, 94, 0.35)",
-        borderRadius: 16,
+        background: "linear-gradient(160deg, rgba(52, 211, 153, 0.12) 0%, rgba(52, 211, 153, 0.03) 100%)",
+        border: "1px solid rgba(52, 211, 153, 0.28)",
+        borderRadius: 18,
         padding: "16px 20px",
       }}
     />

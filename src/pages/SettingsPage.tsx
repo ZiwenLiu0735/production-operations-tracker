@@ -89,11 +89,7 @@ export function SettingsPage() {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`shrink-0 min-h-11 rounded-xl px-5 text-sm font-semibold touch-manipulation ${
-                activeTab === tab.id
-                  ? "bg-brand-600/20 text-brand-400"
-                  : "text-white/60 hover:bg-surface-700"
-              }`}
+              className={`tt-settings-tab shrink-0 ${activeTab === tab.id ? "tt-settings-tab--active" : ""}`}
             >
               {tab.label}
             </button>
@@ -118,7 +114,7 @@ export function SettingsPage() {
               </div>
             )}
 
-            <section className="rounded-xl border border-surface-600/50 bg-surface-800/60 px-4 py-4">
+            <section className="tt-surface-card tt-surface-card--elevated px-4 py-4">
               <h2 className="text-sm font-bold text-white">Backup & Restore</h2>
               <p className="mt-1 text-sm text-white/50">
                 Master data is saved in this browser only ({window.location.origin}). Export a

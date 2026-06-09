@@ -1,11 +1,7 @@
 import { NavLink } from "react-router-dom";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
-  `min-h-11 rounded-xl px-4 py-2 text-sm font-semibold transition-colors touch-manipulation ${
-    isActive
-      ? "bg-brand-600/20 text-brand-400"
-      : "text-white/60 hover:bg-surface-700 hover:text-white"
-  }`;
+  `tt-nav-link inline-flex items-center ${isActive ? "tt-nav-link--active" : ""}`;
 
 export function AppNav() {
   return (

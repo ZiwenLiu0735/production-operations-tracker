@@ -116,22 +116,23 @@ export function ArchiveDetailPage() {
               label="Regular Trim"
               value={archived.sessionTotals.regular}
               color="text-trim-regular"
+              variant="trim"
             />
             <ProductionStat
               label="Stick Trim"
               value={archived.sessionTotals.stick}
               color="text-trim-stick"
+              variant="stick"
             />
             <ProductionStat
               label="Smalls"
               value={archived.sessionTotals.smalls}
               color="text-trim-smalls"
+              variant="smalls"
             />
           </div>
 
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/40">
-            Employee Summary
-          </h2>
+          <h2 className="tt-section-label mb-3">Employee Summary</h2>
           <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {sortedEmployees.map((employee) => {
               const snapshot = archived.employees.find((item) => item.id === employee.id)!;
@@ -139,7 +140,7 @@ export function ArchiveDetailPage() {
               return (
                 <div
                   key={employee.id}
-                  className="rounded-xl border border-surface-600 bg-surface-800 p-4"
+                  className="tt-surface-card p-4"
                 >
                   <EmployeeIdentity employee={employee} size="md" inlineName />
                   <div className="mt-3 space-y-2 border-t border-surface-600/50 pt-3">
@@ -158,9 +159,7 @@ export function ArchiveDetailPage() {
             })}
           </div>
 
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/40">
-            Export
-          </h2>
+          <h2 className="tt-section-label mb-3">Export</h2>
           <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <Button size="lg" variant="secondary" onClick={handleEmployeeReceipts}>
               Employee Receipt PDF

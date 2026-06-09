@@ -51,7 +51,7 @@ export function HourlyTrackPage() {
     >
       <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-6">
         <div className="mx-auto w-full max-w-3xl space-y-8">
-          <div className="rounded-xl border border-dashed border-surface-500 bg-surface-800/40 px-4 py-10 text-center">
+          <div className="tt-surface-card border-dashed px-4 py-10 text-center">
             <p className="text-sm font-medium text-white/70">
               {(session.workType ?? "hourly").toUpperCase()} workflow — prototype placeholder
             </p>

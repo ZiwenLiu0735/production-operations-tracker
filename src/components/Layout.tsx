@@ -34,7 +34,7 @@ export function Layout({
   return (
     <div className="flex h-full min-h-dvh flex-col bg-surface-900 text-white">
       {showHeader && (
-        <header className="flex shrink-0 flex-col gap-3 border-b border-surface-600/50 bg-surface-800 px-4 py-3">
+        <header className="tt-app-header flex shrink-0 flex-col gap-3 px-4 py-3 lg:px-5">
           {responsiveToolbar ? (
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
               {onBack && (
@@ -57,12 +57,8 @@ export function Layout({
                 {headerLeft}
                 {(title || subtitle) && (
                   <div className="min-w-0 flex-1">
-                    {title && (
-                      <h1 className="truncate text-xl font-bold tracking-tight">{title}</h1>
-                    )}
-                    {subtitle && (
-                      <p className="truncate text-xs text-white/50">{subtitle}</p>
-                    )}
+                    {title && <h1 className="tt-page-title truncate">{title}</h1>}
+                    {subtitle && <p className="tt-page-subtitle truncate">{subtitle}</p>}
                   </div>
                 )}
                 {!title && !subtitle && headerCenter && (
@@ -77,7 +73,7 @@ export function Layout({
           )}
         </header>
       )}
-      <main className="flex flex-1 flex-col overflow-hidden">{children}</main>
+      <main className="tt-page-content flex flex-1 flex-col overflow-hidden">{children}</main>
     </div>
   );
 }
