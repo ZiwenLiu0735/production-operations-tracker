@@ -4,15 +4,35 @@ import { formatTime } from "../utils/format";
 interface SessionInfoHeaderProps {
   session: Session;
   compact?: boolean;
+  /** Single-line inline layout for live session header */
+  variant?: "default" | "live";
 }
 
-export function SessionInfoHeader({ session, compact = false }: SessionInfoHeaderProps) {
+export function SessionInfoHeader({
+  session,
+  compact = false,
+  variant = "default",
+}: SessionInfoHeaderProps) {
   const items = [
     { label: "Facility", value: session.facilityName },
     ...(session.roomName ? [{ label: "Room", value: session.roomName }] : []),
     { label: "Supervisor", value: session.supervisorName },
     { label: "Start Time", value: formatTime(session.startedAt) },
   ];
+
+  if (variant === "live") {
+    return (
+      <div className="tt-session-info-live">
+        {items.map((item, index) => (
+          <span key={item.label} className="tt-session-info-live__segment">
+            {index > 0 ? <span className="tt-session-info-live__sep" aria-hidden="true">·</span> : null}
+            <span className="tt-session-info-live__label">{item.label}</span>
+            <span className="tt-session-info-live__value">{item.value}</span>
+          </span>
+        ))}
+      </div>
+    );
+  }
 
   if (compact) {
     return (

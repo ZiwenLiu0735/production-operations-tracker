@@ -93,7 +93,7 @@ async function runChecks(page, label, employeeCount) {
       scrollClientHeight: scroll?.clientHeight ?? 0,
       scrollScrollHeight: scroll?.scrollHeight ?? 0,
       cardCount: cards.length,
-      cardIssues: cardRects.filter((c) => Math.abs(c.height - 84) > 2),
+      cardIssues: cardRects.filter((c) => Math.abs(c.height - 92) > 2),
       pageOverflowX: document.documentElement.scrollWidth > window.innerWidth + 1,
       hasEntryActions: !!entryActions,
       hasWeightInput: !!weightInput,
@@ -164,7 +164,7 @@ async function runChecks(page, label, employeeCount) {
       const name = card.querySelector(".tt-employee-roster-card__name")?.textContent?.trim();
       const rect = card.getBoundingClientRect();
       return {
-        ok: id === "#15" && name === "Xiuqun Li" && weight === "1019g" && Math.abs(rect.height - 84) <= 2,
+        ok: id === "#15" && name === "Xiuqun Li" && weight === "1019g" && Math.abs(rect.height - 92) <= 2,
         id,
         name,
         weight,

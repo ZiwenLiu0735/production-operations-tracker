@@ -197,6 +197,62 @@ input[type="number"] {
   color: var(--tt-text-primary);
 }
 
+/* Live session — compact single-line session info */
+.tt-session-info-live {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.125rem 0.375rem;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.tt-session-info-live__segment {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.tt-session-info-live__sep {
+  margin: 0 0.125rem;
+  color: var(--tt-text-tertiary);
+  opacity: 0.55;
+}
+
+.tt-session-info-live__label {
+  flex-shrink: 0;
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tt-text-tertiary);
+}
+
+.tt-session-info-live__value {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--tt-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tt-app-header--live-compact {
+  gap: 0.375rem !important;
+  padding-top: 0.375rem !important;
+  padding-bottom: 0.375rem !important;
+}
+
+@media (max-width: 1023px) {
+  .tt-app-header--live-compact .tt-live-header-actions .ant-btn {
+    min-height: 36px;
+    padding-inline: 0.625rem;
+    font-size: 0.8125rem;
+  }
+}
+
 /* ── Cards & surfaces ───────────────────────────────────── */
 .tt-surface-card {
   border-radius: var(--tt-radius-md);
@@ -575,8 +631,15 @@ input[type="number"] {
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  padding: 8px !important;
+  padding: 10px !important;
   max-height: none;
+  gap: 8px;
+}
+
+.tt-live-employee-search.ant-input-affix-wrapper {
+  flex-shrink: 0;
+  border-radius: 10px !important;
+  min-height: 36px;
 }
 
 .tt-live-employees-scroll {
@@ -590,22 +653,22 @@ input[type="number"] {
 
 /* Fixed-height roster cards — grams only, no deformation */
 .tt-employee-roster-card.ant-card {
-  height: 84px;
-  min-height: 84px;
-  max-height: 84px;
+  height: 92px;
+  min-height: 92px;
+  max-height: 92px;
   overflow: hidden;
 }
 
 .tt-employee-roster-card .ant-card-body {
   height: 100%;
-  padding: 6px 8px !important;
+  padding: 8px 10px !important;
   overflow: hidden;
 }
 
 .tt-employee-roster-card__body {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 3px;
   height: 100%;
   min-width: 0;
   overflow: hidden;
@@ -613,17 +676,18 @@ input[type="number"] {
 
 .tt-employee-roster-card__id {
   flex-shrink: 0;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: var(--tt-trim);
-  line-height: 1.2;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
 }
 
 .tt-employee-roster-card__name {
   flex-shrink: 0;
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--tt-text-primary);
   line-height: 1.2;
   overflow: hidden;
@@ -634,9 +698,11 @@ input[type="number"] {
 
 .tt-employee-roster-card__nick {
   flex-shrink: 0;
-  font-size: 10px;
+  font-size: 9px;
+  font-weight: 400;
   color: var(--tt-text-tertiary);
-  line-height: 1.2;
+  opacity: 0.65;
+  line-height: 1.15;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -802,6 +868,55 @@ input[type="number"] {
 
   .tt-live-header-actions .ant-btn {
     flex: none;
+  }
+
+  /* Landscape keyboard — collapse non-essential panels */
+  .tt-live-session--entry-focus .tt-live-recent {
+    flex: 0 0 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    opacity: 0;
+    pointer-events: none;
+    border: none;
+  }
+
+  .tt-live-session--entry-focus .tt-live-breakdown {
+    flex: 0 0 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    min-width: 0 !important;
+    width: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    opacity: 0;
+    pointer-events: none;
+    border: none;
+  }
+
+  .tt-live-session--entry-focus .tt-live-center {
+    flex: 1;
+    width: auto;
+    max-width: none;
+  }
+
+  .tt-live-session--entry-focus .tt-live-weight {
+    flex-shrink: 0;
+  }
+}
+
+/* Portrait keyboard — collapse recent entries only */
+@media (max-width: 1023px) {
+  .tt-live-session--entry-focus .tt-live-recent {
+    flex: 0 0 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    opacity: 0;
+    pointer-events: none;
+    border: none;
   }
 }
 

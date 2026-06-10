@@ -1,6 +1,7 @@
 import {
   MinusCircleOutlined,
   RollbackOutlined,
+  SearchOutlined,
   StopOutlined,
   UserAddOutlined,
 } from "@ant-design/icons";
@@ -22,7 +23,7 @@ import { getRecentEntries } from "../utils/export";
 import { getNewestEntry } from "../utils/sessionEntries";
 import { getSessionEmployees } from "../utils/sessionEmployees";
 import { categoryLabel, formatTime, formatWeight, formatWeightWithLbs, parseWholeWeight } from "../utils/format";
-import { employeeNickname, formatEmployeeId } from "../utils/employees";
+import { employeeNickname, filterEmployees, formatEmployeeId } from "../utils/employees";
 import {
   HOURLY_TRACK_PATH,
   START_SESSION_PATH,
@@ -59,6 +60,8 @@ export function LiveSessionPage() {
   const [undoEntry, setUndoEntry] = useState<WeightEntry | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [showAddEmployee, setShowAddEmployee] = useState(false);
+  const [employeeSearchQuery, setEmployeeSearchQuery] = useState("");
+  const [entryFocused, setEntryFocused] = useState(false);
   const inputRef = useRef<InputRef>(null);
   const entryActionsRef = useRef<HTMLDivElement>(null);
 
@@ -70,6 +73,11 @@ export function LiveSessionPage() {
   const recentEntries = useMemo(
     () => (session ? getRecentEntries(session.entries, 20) : []),
     [session],
+  );
+
+  const filteredSessionEmployees = useMemo(
+    () => filterEmployees(sessionEmployees, employeeSearchQuery),
+    [sessionEmployees, employeeSearchQuery],
   );
 
   const scrollEntryIntoView = useCallback(() => {
@@ -110,6 +118,31 @@ export function LiveSessionPage() {
       vv.removeEventListener("scroll", keepEntryVisible);
     };
   }, [session, scrollEntryIntoView]);
+
+  useEffect(() => {
+    const entryEl = entryActionsRef.current;
+    if (!entryEl) return;
+
+    const entryNode = entryEl;
+
+    function handleFocusIn() {
+      setEntryFocused(true);
+    }
+
+    function handleFocusOut(event: FocusEvent) {
+      const next = event.relatedTarget;
+      if (next instanceof Node && entryNode.contains(next)) return;
+      setEntryFocused(false);
+    }
+
+    entryNode.addEventListener("focusin", handleFocusIn);
+    entryNode.addEventListener("focusout", handleFocusOut);
+
+    return () => {
+      entryNode.removeEventListener("focusin", handleFocusIn);
+      entryNode.removeEventListener("focusout", handleFocusOut);
+    };
+  }, [session]);
 
   useEffect(() => {
     if (!session) {
@@ -383,7 +416,8 @@ export function LiveSessionPage() {
       onBack={handleBack}
       backLabel="Setup"
       headerLayout="responsive"
-      headerCenter={<SessionInfoHeader session={activeSession} compact />}
+      headerDensity="compact"
+      headerCenter={<SessionInfoHeader session={activeSession} variant="live" />}
       headerRight={
         <>
           <Button size="large" icon={<UserAddOutlined />} onClick={() => setShowAddEmployee(true)}>
@@ -403,7 +437,9 @@ export function LiveSessionPage() {
         </>
       }
     >
-      <div className="tt-live-session">
+      <div
+        className={`tt-live-session${entryFocused ? " tt-live-session--entry-focus" : ""}`}
+      >
         {/* Row 1 (portrait) / Left column (landscape): employee roster */}
         <section className="tt-live-section tt-live-employees">
           <Card
@@ -413,23 +449,40 @@ export function LiveSessionPage() {
             style={{ height: "100%", borderRadius: 0, background: "transparent" }}
             styles={{ body: { display: "flex", flexDirection: "column", overflow: "hidden" } }}
           >
+            <Input
+              className="tt-live-employee-search"
+              allowClear
+              prefix={<SearchOutlined style={{ color: "rgba(255,255,255,0.35)" }} />}
+              placeholder="Search #, name, or preferred name…"
+              value={employeeSearchQuery}
+              onChange={(e) => setEmployeeSearchQuery(e.target.value)}
+              aria-label="Search employees"
+            />
             <div className="tt-live-employees-scroll">
-              <Row gutter={[6, 6]} style={{ alignContent: "flex-start" }}>
-                {sessionEmployees.map((employee) => {
-                  const totals = getEmployeeTotals(employee.id, activeSession.entries);
-                  const isActive = employee.id === activeEmployeeId;
-                  return (
-                    <Col key={employee.id} xs={12} sm={8} lg={24}>
-                      <LiveEmployeeCard
-                        employee={employee}
-                        totals={totals}
-                        isActive={isActive}
-                        onClick={() => handleEmployeeClick(employee.id)}
-                      />
-                    </Col>
-                  );
-                })}
-              </Row>
+              {filteredSessionEmployees.length === 0 ? (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="No matching employees"
+                  style={{ margin: "12px 0" }}
+                />
+              ) : (
+                <Row gutter={[10, 10]} style={{ alignContent: "flex-start" }}>
+                  {filteredSessionEmployees.map((employee) => {
+                    const totals = getEmployeeTotals(employee.id, activeSession.entries);
+                    const isActive = employee.id === activeEmployeeId;
+                    return (
+                      <Col key={employee.id} xs={12} sm={8} lg={24}>
+                        <LiveEmployeeCard
+                          employee={employee}
+                          totals={totals}
+                          isActive={isActive}
+                          onClick={() => handleEmployeeClick(employee.id)}
+                        />
+                      </Col>
+                    );
+                  })}
+                </Row>
+              )}
             </div>
           </Card>
         </section>
