@@ -71,8 +71,8 @@ npm run dev
 
 Open `http://localhost:5173`. Landscape mode is recommended on iPad.
 
-The Supabase variables in `.env.local` may remain empty while the application
-uses its current local-storage workflow. Never commit `.env.local`.
+Populate both Supabase variables in `.env.local`; authentication cannot start
+without them. Never commit `.env.local`.
 
 `npm ci` installs both the frontend dependencies and the project-local Supabase
 CLI. Developers do not need to install the Supabase CLI globally.
@@ -114,6 +114,11 @@ npm run supabase:stop        # Stop the local Supabase stack
 Link credentials and database passwords are stored locally and must never be
 committed. See `docs/supabase-architecture.md` for the planned data model and
 migration sequence.
+
+Cloudflare Pages must define `VITE_SUPABASE_URL` and
+`VITE_SUPABASE_PUBLISHABLE_KEY` for both Preview and Production deployments.
+Only the publishable browser key belongs in frontend environment variables;
+never expose a Supabase secret or service-role key.
 
 ## Main Workflows
 
