@@ -53,7 +53,7 @@ export function SettingsPage() {
             <section className="rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-4">
               <h2 className="text-sm font-bold text-blue-100">Supabase master data</h2>
               <p className="mt-1 text-sm text-white/50">
-                Facility editing is enabled. Rooms, employees, and user roles
+                Facility and room editing are enabled. Employees and user roles
                 remain read-only until their admin workflows are connected.
               </p>
             </section>

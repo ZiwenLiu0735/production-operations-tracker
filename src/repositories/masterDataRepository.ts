@@ -160,6 +160,46 @@ export async function getRooms(): Promise<RoomRecord[]> {
   return data.map(mapRoom);
 }
 
+export async function createRoom(input: {
+  facilityId: string;
+  name: string;
+}): Promise<RoomRecord> {
+  const { data, error } = await supabase
+    .from("rooms")
+    .insert({
+      facility_id: input.facilityId,
+      name: input.name.trim(),
+    })
+    .select()
+    .single();
+
+  if (error) throw queryError("room", error.message);
+  return mapRoom(data);
+}
+
+export async function updateRoom(
+  id: string,
+  updates: { facilityId?: string; name?: string; active?: boolean },
+): Promise<RoomRecord> {
+  const values: Database["public"]["Tables"]["rooms"]["Update"] = {};
+
+  if (updates.facilityId !== undefined) {
+    values.facility_id = updates.facilityId;
+  }
+  if (updates.name !== undefined) values.name = updates.name.trim();
+  if (updates.active !== undefined) values.active = updates.active;
+
+  const { data, error } = await supabase
+    .from("rooms")
+    .update(values)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw queryError("room", error.message);
+  return mapRoom(data);
+}
+
 export async function getEmployees(): Promise<EmployeeRecord[]> {
   const { data, error } = await supabase
     .from("employees")

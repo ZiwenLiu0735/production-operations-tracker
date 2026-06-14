@@ -25,7 +25,10 @@ export function normalizeMasterData(data: MasterData): MasterData {
       name: f.name,
       active: f.active ?? true,
     })),
-    rooms: [...data.rooms],
+    rooms: data.rooms.map((room) => ({
+      ...room,
+      active: room.active ?? true,
+    })),
     supervisors: data.supervisors.map((s) => ({ ...s, active: s.active ?? true })),
   };
 }

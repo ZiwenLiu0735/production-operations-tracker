@@ -10,8 +10,10 @@ import {
 import type { Employee, Facility, MasterData, Room, Supervisor } from "../types";
 import {
   createFacility as createFacilityRecord,
+  createRoom as createRoomRecord,
   getMasterData,
   updateFacility as updateFacilityRecord,
+  updateRoom as updateRoomRecord,
   type RemoteMasterData,
 } from "../repositories/masterDataRepository";
 import { sortEmployeesByNumber } from "../utils/employees";
@@ -30,6 +32,11 @@ interface MasterDataContextValue {
   updateFacility: (
     id: string,
     updates: { name?: string; active?: boolean },
+  ) => Promise<void>;
+  createRoom: (input: { facilityId: string; name: string }) => Promise<void>;
+  updateRoom: (
+    id: string,
+    updates: { facilityId?: string; name?: string; active?: boolean },
   ) => Promise<void>;
 }
 
@@ -124,6 +131,33 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const createRoom = useCallback(
+    async (input: { facilityId: string; name: string }) => {
+      const room = await createRoomRecord(input);
+      setData((current) => ({
+        ...current,
+        rooms: [...current.rooms, room],
+      }));
+    },
+    [],
+  );
+
+  const updateRoom = useCallback(
+    async (
+      id: string,
+      updates: { facilityId?: string; name?: string; active?: boolean },
+    ) => {
+      const room = await updateRoomRecord(id, updates);
+      setData((current) => ({
+        ...current,
+        rooms: current.rooms.map((item) =>
+          item.id === room.id ? room : item,
+        ),
+      }));
+    },
+    [],
+  );
+
   const employees = useMemo(
     () => sortEmployeesByNumber(data.employees),
     [data.employees],
@@ -152,6 +186,8 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
       reload,
       createFacility,
       updateFacility,
+      createRoom,
+      updateRoom,
     }),
     [
       data,
@@ -163,6 +199,8 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
       reload,
       createFacility,
       updateFacility,
+      createRoom,
+      updateRoom,
     ],
   );
 

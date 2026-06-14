@@ -153,8 +153,8 @@ never expose a Supabase secret or service-role key.
 - Review and edit completed sessions
 - Preserve an audit trail for archive changes
 - View remote facilities, rooms, supervisors, and employees
-- Admins can create, rename, activate, and deactivate facilities
-- Room, employee, and profile editing remain read-only during the migration
+- Admins can manage facilities and rooms in Supabase
+- Employee and profile editing remain read-only during the migration
 
 ## Development Workflow
 
