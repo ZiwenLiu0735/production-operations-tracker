@@ -55,7 +55,7 @@ export function LiveSessionPage() {
     reloadFromStorage,
     updateSessionCadillac,
   } = useSession();
-  const { activeEmployees } = useMasterData();
+  const { activeEmployees, activeOperators } = useMasterData();
 
   const [activeEmployeeId, setActiveEmployeeId] = useState<string>("");
   const [weight, setWeight] = useState("");
@@ -208,7 +208,7 @@ export function LiveSessionPage() {
     navigate(SUMMARY_PATH);
   }
 
-  function handleAddEmployee(employee: (typeof activeEmployees)[number]) {
+  function handleAddEmployee(employee: (typeof activeOperators)[number]) {
     addEmployee({
       id: employee.id,
       employeeNumber: employee.employeeNumber,
@@ -369,7 +369,7 @@ export function LiveSessionPage() {
       headerRight={
         <>
           <Button size="large" icon={<UserAddOutlined />} onClick={() => setShowAddEmployee(true)}>
-            Add Employee
+            Add Operator
           </Button>
           <Button
             size="large"
@@ -377,7 +377,7 @@ export function LiveSessionPage() {
             onClick={handleRemoveEmployee}
             disabled={!resolvedActiveEmployeeId}
           >
-            Remove
+            Remove Operator
           </Button>
           <Button danger size="large" icon={<StopOutlined />} onClick={handleEndSession}>
             End Session
@@ -498,7 +498,7 @@ export function LiveSessionPage() {
 
       {showAddEmployee && (
         <PrototypeAddEmployeeModal
-          allEmployees={activeEmployees}
+          allEmployees={activeOperators}
           enrolledEmployeeIds={sessionEmployees.map((employee) => employee.id)}
           onAdd={handleAddEmployee}
           onClose={() => setShowAddEmployee(false)}

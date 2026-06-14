@@ -20,10 +20,12 @@ import { sortEmployeesByNumber } from "../utils/employees";
 
 interface MasterDataContextValue {
   employees: Employee[];
+  operators: Employee[];
   facilities: Facility[];
   rooms: Room[];
   supervisors: Supervisor[];
   activeEmployees: Employee[];
+  activeOperators: Employee[];
   activeSupervisors: Supervisor[];
   loading: boolean;
   error: string | null;
@@ -49,6 +51,10 @@ const EMPTY_MASTER_DATA: MasterData = {
   supervisors: [],
 };
 
+interface MasterDataState extends MasterData {
+  operators: Employee[];
+}
+
 function toMasterData(remote: RemoteMasterData): MasterData {
   return {
     facilities: remote.facilities,
@@ -62,8 +68,18 @@ function toMasterData(remote: RemoteMasterData): MasterData {
   };
 }
 
+function toMasterDataState(remote: RemoteMasterData): MasterDataState {
+  return {
+    ...toMasterData(remote),
+    operators: remote.operators,
+  };
+}
+
 export function MasterDataProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<MasterData>(EMPTY_MASTER_DATA);
+  const [data, setData] = useState<MasterDataState>({
+    ...EMPTY_MASTER_DATA,
+    operators: [],
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -71,7 +87,7 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      setData(toMasterData(await getMasterData()));
+      setData(toMasterDataState(await getMasterData()));
     } catch (loadError) {
       setError(
         loadError instanceof Error
@@ -88,7 +104,7 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
 
     void getMasterData()
       .then((remote) => {
-        if (active) setData(toMasterData(remote));
+        if (active) setData(toMasterDataState(remote));
       })
       .catch((loadError: unknown) => {
         if (!active) return;
@@ -168,6 +184,16 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
     [data.employees],
   );
 
+  const operators = useMemo(
+    () => sortEmployeesByNumber(data.operators),
+    [data.operators],
+  );
+
+  const activeOperators = useMemo(
+    () => sortEmployeesByNumber(data.operators.filter((employee) => employee.active)),
+    [data.operators],
+  );
+
   const activeSupervisors = useMemo(
     () => data.supervisors.filter((s) => s.active),
     [data.supervisors],
@@ -176,10 +202,12 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       employees,
+      operators,
       facilities: data.facilities,
       rooms: data.rooms,
       supervisors: data.supervisors,
       activeEmployees,
+      activeOperators,
       activeSupervisors,
       loading,
       error,
@@ -192,7 +220,9 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
     [
       data,
       employees,
+      operators,
       activeEmployees,
+      activeOperators,
       activeSupervisors,
       loading,
       error,

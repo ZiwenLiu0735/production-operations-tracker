@@ -52,6 +52,7 @@ export interface RemoteMasterData {
   facilities: FacilityRecord[];
   rooms: RoomRecord[];
   employees: EmployeeRecord[];
+  operators: EmployeeRecord[];
   supervisors: SupervisorRecord[];
 }
 
@@ -210,6 +211,13 @@ export async function getEmployees(): Promise<EmployeeRecord[]> {
   return data.map(mapEmployee);
 }
 
+export async function getOperators(): Promise<EmployeeRecord[]> {
+  const { data, error } = await supabase.rpc("list_operator_employees");
+
+  if (error) throw queryError("operators", error.message);
+  return data.map(mapEmployee);
+}
+
 export async function getSupervisors(): Promise<SupervisorRecord[]> {
   const { data, error } = await supabase
     .from("profiles")
@@ -234,6 +242,25 @@ export async function getMasterData(): Promise<RemoteMasterData> {
     getEmployees(),
     getSupervisors(),
   ]);
+  let operators: EmployeeRecord[];
 
-  return { facilities, rooms, employees, supervisors };
+  try {
+    operators = await getOperators();
+  } catch (error) {
+    if (
+      !(error instanceof Error) ||
+      !error.message.includes("list_operator_employees")
+    ) {
+      throw error;
+    }
+
+    const privilegedEmployeeIds = new Set(
+      supervisors.map((supervisor) => supervisor.employeeId),
+    );
+    operators = employees.filter(
+      (employee) => !privilegedEmployeeIds.has(employee.id),
+    );
+  }
+
+  return { facilities, rooms, employees, operators, supervisors };
 }
