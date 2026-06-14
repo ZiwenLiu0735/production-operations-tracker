@@ -5,7 +5,7 @@ import { formatEmployeeId } from "../utils/employees";
 import { formatWeight } from "../utils/format";
 
 function formatEmployeeUndoLabel(employee: Employee): string {
-  const nick = employee.nickname?.trim();
+  const nick = employee.preferredName?.trim();
   const name = nick || employee.legalName;
   return `${formatEmployeeId(employee.employeeNumber)} ${name}`;
 }

@@ -118,7 +118,7 @@ export function StartSessionPage() {
 
   const selectedFacility = facilities.find((facility) => facility.id === facilityId);
   const isCadillac = selectedFacility
-    ? isCadillacFacility(selectedFacility.name, selectedFacility.code)
+    ? isCadillacFacility(selectedFacility.name)
     : false;
 
   const canStart =
@@ -174,7 +174,7 @@ export function StartSessionPage() {
         id: employee.id,
         employeeNumber: employee.employeeNumber,
         legalName: employee.legalName,
-        nickname: employee.nickname,
+        nickname: employee.preferredName,
       }));
 
     startSession({
@@ -243,7 +243,9 @@ export function StartSessionPage() {
 
             <SectionCard title="Facility">
               <Row gutter={[10, 10]}>
-                {facilities.map((facility) => (
+                {facilities
+                  .filter((facility) => facility.active)
+                  .map((facility) => (
                   <Col key={facility.id} xs={12} sm={8}>
                     <SelectCard
                       label={facility.name.toUpperCase()}
@@ -257,7 +259,7 @@ export function StartSessionPage() {
                       }}
                     />
                   </Col>
-                ))}
+                  ))}
               </Row>
             </SectionCard>
 

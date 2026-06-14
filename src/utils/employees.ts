@@ -5,7 +5,7 @@ export function formatEmployeeId(number: number): string {
 }
 
 export function employeeNickname(employee: Employee): string | undefined {
-  const nick = employee.nickname?.trim();
+  const nick = employee.preferredName?.trim();
   return nick || undefined;
 }
 

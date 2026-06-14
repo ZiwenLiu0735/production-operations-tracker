@@ -1,10 +1,14 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { Button } from "./components/Button";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { ArchiveProvider } from "./context/ArchiveContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { MasterDataProvider } from "./context/MasterDataContext";
+import {
+  MasterDataProvider,
+  useMasterData,
+} from "./context/MasterDataContext";
 import { SessionProvider } from "./context/SessionContext";
 import { SyncProvider } from "./context/SyncContext";
 import { ArchiveDetailPage } from "./pages/ArchiveDetailPage";
@@ -42,11 +46,12 @@ function OperationalRoutes() {
   return (
     <SyncProvider>
       <MasterDataProvider>
-        <ArchiveProvider>
-          <SessionProvider>
-            <OfflineIndicator />
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
+        <MasterDataGate>
+          <ArchiveProvider>
+            <SessionProvider>
+              <OfflineIndicator />
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
                 <Route path={START_SESSION_PATH} element={<StartSessionPage />} />
                 <Route path={TRIM_TRACK_LIVE_PATH} element={<LiveSessionPage />} />
                 <Route path={HOURLY_TRACK_PATH} element={<HourlyTrackPage />} />
@@ -85,13 +90,32 @@ function OperationalRoutes() {
                   element={<Navigate to={HOURLY_TRACK_PATH} replace />}
                 />
                 <Route path="*" element={<Navigate to={START_SESSION_PATH} replace />} />
-              </Routes>
-            </Suspense>
-          </SessionProvider>
-        </ArchiveProvider>
+                </Routes>
+              </Suspense>
+            </SessionProvider>
+          </ArchiveProvider>
+        </MasterDataGate>
       </MasterDataProvider>
     </SyncProvider>
   );
+}
+
+function MasterDataGate({ children }: { children: ReactNode }) {
+  const { error, loading, reload } = useMasterData();
+
+  if (loading) return <PageLoader />;
+
+  if (error) {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-surface-900 p-6 text-center text-white">
+        <h1 className="text-xl font-bold">Unable to load application data</h1>
+        <p className="max-w-md text-sm text-white/60">{error}</p>
+        <Button onClick={() => void reload()}>Try Again</Button>
+      </div>
+    );
+  }
+
+  return children;
 }
 
 function AuthGate() {
