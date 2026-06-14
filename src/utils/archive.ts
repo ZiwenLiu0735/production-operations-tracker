@@ -300,5 +300,5 @@ export function exportArchiveJson(): string {
 }
 
 export function enqueueArchiveExportFilename(): string {
-  return `trimtrack-archive-export_${formatDateShort(Date.now())}_${generateId().slice(0, 8)}.json`;
+  return `production-operations-archive_${formatDateShort(Date.now())}_${generateId().slice(0, 8)}.json`;
 }
