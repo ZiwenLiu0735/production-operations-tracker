@@ -13,7 +13,9 @@ weight entry, session summaries, archive management, and exports.
 - PDF and spreadsheet exports
 
 The application is being prepared for a future Supabase backend. Supabase is not
-currently connected to the active user workflow.
+currently connected to the active user workflow. The repository is linked to a
+hosted Supabase project, and the database schema will be managed through SQL
+migrations in `supabase/migrations`.
 
 ## Requirements
 
@@ -23,9 +25,43 @@ currently connected to the active user workflow.
 Using `nvm` is recommended but not required. With `nvm` installed, the repository
 selects the correct Node.js version from `.nvmrc`.
 
+Docker Desktop or another Docker-compatible runtime is required only when
+running the complete Supabase stack locally.
+
 ## Local Setup
 
+### 1. Install nvm on macOS
+
+Install [Homebrew](https://brew.sh/) first if `brew --version` is not available.
+Then install and configure nvm:
+
 ```bash
+brew install nvm
+mkdir -p "$HOME/.nvm"
+```
+
+Add the following lines to `~/.zshrc`:
+
+```bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$(brew --prefix nvm)/nvm.sh" ] && \. "$(brew --prefix nvm)/nvm.sh"
+[ -s "$(brew --prefix nvm)/etc/bash_completion.d/nvm" ] && \. "$(brew --prefix nvm)/etc/bash_completion.d/nvm"
+```
+
+Reload the shell and verify the installation:
+
+```bash
+source "$HOME/.zshrc"
+nvm --version
+```
+
+Developers who already have a working nvm installation can skip this section.
+
+### 2. Clone And Run The Project
+
+```bash
+git clone https://github.com/ZiwenLiu0735/production-operations-tracker.git
+cd production-operations-tracker
 nvm install
 nvm use
 npm ci
@@ -38,6 +74,9 @@ Open `http://localhost:5173`. Landscape mode is recommended on iPad.
 The Supabase variables in `.env.local` may remain empty while the application
 uses its current local-storage workflow. Never commit `.env.local`.
 
+`npm ci` installs both the frontend dependencies and the project-local Supabase
+CLI. Developers do not need to install the Supabase CLI globally.
+
 ## Project Commands
 
 ```bash
@@ -49,6 +88,32 @@ npm run preview  # Preview the production build locally
 ```
 
 Run `npm run check` before opening a pull request.
+
+## Supabase Development
+
+The database schema is versioned in `supabase/migrations`. Do not make
+untracked schema changes directly in the hosted project.
+
+One-time setup for a developer who has access to the Supabase project:
+
+```bash
+npx supabase login
+npx supabase link --project-ref ongpgudepsniirbqvdzc
+```
+
+Common local database commands:
+
+```bash
+npm run supabase:start       # Start the local Supabase stack
+npm run supabase:status      # Show local service URLs and keys
+npm run supabase:reset       # Rebuild the local database from migrations
+npm run supabase:migrations  # Compare local and remote migration history
+npm run supabase:stop        # Stop the local Supabase stack
+```
+
+Link credentials and database passwords are stored locally and must never be
+committed. See `docs/supabase-architecture.md` for the planned data model and
+migration sequence.
 
 ## Main Workflows
 

@@ -1,0 +1,115 @@
+# Supabase Architecture
+
+## First Release Scope
+
+- Users must sign in before using the application.
+- Supabase is the source of truth for shared production data.
+- The first release requires an internet connection.
+- Offline writes and background synchronization are deferred.
+- The existing React pages and calculation utilities should be reused.
+
+## Authentication And Roles
+
+Supabase Auth owns credentials and login sessions. Application-specific user
+data lives in `public.profiles`, linked one-to-one with `auth.users`.
+
+Initial roles:
+
+- `admin`: manage users, master data, sessions, and archives.
+- `supervisor`: start and operate sessions, review and edit archives.
+- `operator`: operate an assigned active session.
+
+New accounts should be invited or created by an administrator. Public sign-up
+should remain disabled.
+
+## Database Model
+
+### Identity
+
+- `profiles`
+  - `id` references `auth.users`
+  - `display_name`
+  - `role`
+  - `active`
+  - timestamps
+
+### Master Data
+
+- `facilities`
+- `rooms`
+- `employees`
+
+Facilities own rooms. Employees are production workers and are separate from
+application users. Master-data records should normally be deactivated rather
+than deleted so historical sessions continue to reference valid records.
+
+### Production Sessions
+
+- `sessions`
+  - facility and session metadata
+  - status: `active`, `completed`, or `deleted`
+  - start and end timestamps
+  - optional Cadillac metadata
+- `session_rooms`
+- `session_supervisors`
+- `session_employees`
+- `weight_entries`
+
+Join tables preserve the many-to-many relationships already supported by the
+frontend. Session participant tables also store name and employee-number
+snapshots so historical reports do not change when master data is edited.
+
+### Audit
+
+- `audit_logs`
+  - actor
+  - action
+  - target table and record
+  - previous and new values
+  - timestamp
+
+Session totals and employee totals are derived from active `weight_entries`.
+They should not be stored as independently editable values.
+
+## Security
+
+Row Level Security must be enabled on every table exposed through the Supabase
+API.
+
+- Authenticated active users may read the operational data needed by the app.
+- Admins may manage profiles and master data.
+- Admins and supervisors may create, update, complete, and archive sessions.
+- Operators may update active sessions they are assigned to.
+- The browser receives only the project URL and publishable key.
+- Secret or service-role keys must never be placed in Vite environment
+  variables or committed to Git.
+
+## Frontend Boundaries
+
+Pages and presentational components remain in place. Persistence is replaced
+behind repository modules:
+
+```text
+Page -> Context/hook -> Repository -> Supabase client -> PostgreSQL
+```
+
+Existing calculation and export utilities remain frontend code where they are
+pure transformations. Authorization, durable storage, constraints, and audit
+integrity belong in the database.
+
+## Migration Sequence
+
+1. Add the Supabase CLI and initialize `supabase/`.
+2. Create migrations for profiles, roles, and the Auth profile trigger.
+3. Create migrations for master data.
+4. Create migrations for sessions, participants, entries, and audit logs.
+5. Add constraints, indexes, and RLS policies.
+6. Generate TypeScript database types.
+7. Add the Supabase browser client and login screen.
+8. Migrate master-data contexts from local storage.
+9. Migrate the live session workflow.
+10. Migrate archives and audit editing.
+11. Remove replaced local-storage persistence and the placeholder sync queue.
+
+Each schema change must be committed as a migration. Do not make untracked
+schema changes directly in the hosted Supabase project.

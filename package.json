@@ -12,7 +12,12 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "check": "npm run lint && npm run build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status",
+    "supabase:reset": "supabase db reset",
+    "supabase:migrations": "supabase migration list"
   },
   "dependencies": {
     "@ant-design/icons": "^6.2.5",
@@ -36,6 +41,7 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
     "playwright": "^1.60.0",
+    "supabase": "^2.106.0",
     "tailwindcss": "^4.3.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
