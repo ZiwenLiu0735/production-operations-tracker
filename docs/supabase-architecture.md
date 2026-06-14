@@ -17,10 +17,22 @@ Initial roles:
 
 - `admin`: manage users, master data, sessions, and archives.
 - `supervisor`: start and operate sessions, review and edit archives.
-- `operator`: operate an assigned active session.
+- `operator`: review their own sessions and production records.
 
 New accounts should be invited or created by an administrator. Public sign-up
 should remain disabled.
+
+Every application user is also an employee. Supabase Auth owns the login,
+`profiles` owns the application role, and `employees` owns the worker's business
+identity:
+
+```text
+auth.users 1---1 profiles 1---1 employees
+```
+
+The Auth trigger creates a profile with the default `operator` role. An
+administrator then links that profile to an existing employee. An active login
+without an employee link cannot access operational data.
 
 ## Database Model
 
@@ -28,6 +40,7 @@ should remain disabled.
 
 - `profiles`
   - `id` references `auth.users`
+  - `employee_id` uniquely references `employees`
   - `display_name`
   - `role`
   - `active`
