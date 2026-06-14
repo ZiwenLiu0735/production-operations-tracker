@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { START_SESSION_PATH } from "../lib/sessionRoutes";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `tt-nav-link inline-flex items-center ${isActive ? "tt-nav-link--active" : ""}`;
@@ -9,7 +10,7 @@ export function AppNav() {
 
   return (
     <nav className="flex items-center gap-1" aria-label="Application navigation">
-      <NavLink to="/" end className={linkClass}>
+      <NavLink to={START_SESSION_PATH} className={linkClass}>
         Start Session
       </NavLink>
       <NavLink to="/archive" className={linkClass}>

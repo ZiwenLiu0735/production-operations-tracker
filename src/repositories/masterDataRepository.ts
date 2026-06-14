@@ -119,6 +119,37 @@ export async function getFacilities(): Promise<FacilityRecord[]> {
   return data.map(mapFacility);
 }
 
+export async function createFacility(name: string): Promise<FacilityRecord> {
+  const { data, error } = await supabase
+    .from("facilities")
+    .insert({ name: name.trim() })
+    .select()
+    .single();
+
+  if (error) throw queryError("facility", error.message);
+  return mapFacility(data);
+}
+
+export async function updateFacility(
+  id: string,
+  updates: { name?: string; active?: boolean },
+): Promise<FacilityRecord> {
+  const values: Database["public"]["Tables"]["facilities"]["Update"] = {};
+
+  if (updates.name !== undefined) values.name = updates.name.trim();
+  if (updates.active !== undefined) values.active = updates.active;
+
+  const { data, error } = await supabase
+    .from("facilities")
+    .update(values)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw queryError("facility", error.message);
+  return mapFacility(data);
+}
+
 export async function getRooms(): Promise<RoomRecord[]> {
   const { data, error } = await supabase
     .from("rooms")

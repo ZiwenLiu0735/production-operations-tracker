@@ -8,6 +8,7 @@ import { FacilitiesTab } from "../components/settings/FacilitiesTab";
 import { RoomsTab } from "../components/settings/RoomsTab";
 import { SupervisorsTab } from "../components/settings/SupervisorsTab";
 import { useMasterData } from "../context/MasterDataContext";
+import { START_SESSION_PATH } from "../lib/sessionRoutes";
 
 type SettingsTab = "employees" | "facilities" | "rooms" | "supervisors";
 
@@ -21,14 +22,14 @@ const TABS: { id: SettingsTab; label: string }[] = [
 export function SettingsPage() {
   const navigate = useNavigate();
   const { reload } = useMasterData();
-  const [activeTab, setActiveTab] = useState<SettingsTab>("employees");
+  const [activeTab, setActiveTab] = useState<SettingsTab>("facilities");
 
   return (
     <Layout
       title="Settings"
-      subtitle="View master data"
-      onBack={() => navigate("/")}
-      backLabel="Back"
+      subtitle="Manage master data"
+      onBack={() => navigate(START_SESSION_PATH)}
+      backLabel="Start Session"
       headerRight={<AppNav />}
     >
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -50,12 +51,10 @@ export function SettingsPage() {
         <div className="flex-1 overflow-y-auto p-6">
           <div className="mx-auto max-w-3xl space-y-6">
             <section className="rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-4">
-              <h2 className="text-sm font-bold text-blue-100">
-                Supabase read-only mode
-              </h2>
+              <h2 className="text-sm font-bold text-blue-100">Supabase master data</h2>
               <p className="mt-1 text-sm text-white/50">
-                These records are loaded from the remote database. Admin editing
-                will be enabled in the next implementation step.
+                Facility editing is enabled. Rooms, employees, and user roles
+                remain read-only until their admin workflows are connected.
               </p>
             </section>
 

@@ -9,7 +9,9 @@ import {
 } from "react";
 import type { Employee, Facility, MasterData, Room, Supervisor } from "../types";
 import {
+  createFacility as createFacilityRecord,
   getMasterData,
+  updateFacility as updateFacilityRecord,
   type RemoteMasterData,
 } from "../repositories/masterDataRepository";
 import { sortEmployeesByNumber } from "../utils/employees";
@@ -24,6 +26,11 @@ interface MasterDataContextValue {
   loading: boolean;
   error: string | null;
   reload: () => Promise<void>;
+  createFacility: (name: string) => Promise<void>;
+  updateFacility: (
+    id: string,
+    updates: { name?: string; active?: boolean },
+  ) => Promise<void>;
 }
 
 const MasterDataContext = createContext<MasterDataContextValue | null>(null);
@@ -93,6 +100,30 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const createFacility = useCallback(async (name: string) => {
+    const facility = await createFacilityRecord(name);
+    setData((current) => ({
+      ...current,
+      facilities: [...current.facilities, facility],
+    }));
+  }, []);
+
+  const updateFacility = useCallback(
+    async (
+      id: string,
+      updates: { name?: string; active?: boolean },
+    ) => {
+      const facility = await updateFacilityRecord(id, updates);
+      setData((current) => ({
+        ...current,
+        facilities: current.facilities.map((item) =>
+          item.id === facility.id ? facility : item,
+        ),
+      }));
+    },
+    [],
+  );
+
   const employees = useMemo(
     () => sortEmployeesByNumber(data.employees),
     [data.employees],
@@ -119,6 +150,8 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
       loading,
       error,
       reload,
+      createFacility,
+      updateFacility,
     }),
     [
       data,
@@ -128,6 +161,8 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
       loading,
       error,
       reload,
+      createFacility,
+      updateFacility,
     ],
   );
 
