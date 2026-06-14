@@ -19,4 +19,14 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    files: [
+      'src/context/**/*.tsx',
+      'src/components/EditorNameModal.tsx',
+      'src/components/settings/SettingsUi.tsx',
+    ],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

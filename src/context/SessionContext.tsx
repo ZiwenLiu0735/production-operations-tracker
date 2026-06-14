@@ -244,7 +244,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const resumeSession = useCallback(() => {
     setSession((prev) => {
       if (!prev) return prev;
-      const { endedAt: _, ...rest } = prev;
+      const rest = { ...prev };
+      delete rest.endedAt;
       commitSession(rest);
       return rest;
     });

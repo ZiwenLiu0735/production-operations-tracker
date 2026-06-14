@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AppNav } from "../components/AppNav";
 import { AuditTrailPanel } from "../components/AuditTrailPanel";
@@ -29,20 +29,13 @@ export function ArchiveEditPage() {
 
   const archived = id ? getArchive(id) : null;
 
-  const [facilityId, setFacilityId] = useState("");
-  const [roomId, setRoomId] = useState("");
-  const [supervisorId, setSupervisorId] = useState("");
-  const [sessionDate, setSessionDate] = useState("");
-  const [notes, setNotes] = useState("");
-
-  useEffect(() => {
-    if (!archived) return;
-    setFacilityId(archived.facilityId);
-    setRoomId(archived.roomId ?? "");
-    setSupervisorId(archived.supervisorId);
-    setSessionDate(dateInputValue(archived.startedAt));
-    setNotes(archived.notes ?? "");
-  }, [archived]);
+  const [facilityId, setFacilityId] = useState(() => archived?.facilityId ?? "");
+  const [roomId, setRoomId] = useState(() => archived?.roomId ?? "");
+  const [supervisorId, setSupervisorId] = useState(() => archived?.supervisorId ?? "");
+  const [sessionDate, setSessionDate] = useState(() =>
+    archived ? dateInputValue(archived.startedAt) : "",
+  );
+  const [notes, setNotes] = useState(() => archived?.notes ?? "");
 
   const availableRooms = useMemo(
     () => rooms.filter((room) => room.facilityId === facilityId),

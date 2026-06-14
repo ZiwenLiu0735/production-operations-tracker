@@ -58,13 +58,11 @@ const MasterDataContext = createContext<MasterDataContextValue | null>(null);
 export function MasterDataProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<MasterData>(loadMasterData);
   const [reminderDismissed, setReminderDismissed] = useState(false);
-  const [reminderTick, setReminderTick] = useState(0);
 
   const commit = useCallback((next: MasterData) => {
     persistMasterData(next);
     setData(next);
     setReminderDismissed(false);
-    setReminderTick((tick) => tick + 1);
     return next;
   }, []);
 
@@ -76,7 +74,6 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
         persistMasterData(next);
         return next;
       });
-      setReminderTick((tick) => tick + 1);
     },
     [],
   );
@@ -231,13 +228,11 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
   const resetToDefaults = useCallback(() => {
     commit(normalizeMasterData(defaultMasterData as MasterData));
     setReminderDismissed(false);
-    setReminderTick((tick) => tick + 1);
   }, [commit]);
 
   const exportBackup = useCallback(() => {
     downloadBackup(data);
     setReminderDismissed(true);
-    setReminderTick((tick) => tick + 1);
   }, [data]);
 
   const importBackup = useCallback(
@@ -250,15 +245,11 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
         recordBackupExported(exportedAt);
       }
       setReminderDismissed(true);
-      setReminderTick((tick) => tick + 1);
     },
     [],
   );
 
-  const needsBackupReminder = useMemo(
-    () => !reminderDismissed && shouldShowBackupReminder(),
-    [reminderDismissed, reminderTick, data],
-  );
+  const needsBackupReminder = !reminderDismissed && shouldShowBackupReminder();
 
   const dismissBackupReminder = useCallback(() => {
     setReminderDismissed(true);

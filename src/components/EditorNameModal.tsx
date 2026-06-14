@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "./Button";
 import { getEditorName, setEditorName } from "../utils/editorIdentity";
 import { inputClass } from "./settings/SettingsUi";
@@ -84,10 +84,6 @@ export function useEditorNameAction() {
 
 export function useEnsureEditorName() {
   const [ready, setReady] = useState(() => Boolean(getEditorName()));
-
-  useEffect(() => {
-    setReady(Boolean(getEditorName()));
-  }, []);
 
   return { ready, setReady };
 }
