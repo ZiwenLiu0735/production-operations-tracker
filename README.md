@@ -108,12 +108,17 @@ npm run supabase:start       # Start the local Supabase stack
 npm run supabase:status      # Show local service URLs and keys
 npm run supabase:reset       # Rebuild the local database from migrations
 npm run supabase:migrations  # Compare local and remote migration history
+npm run supabase:types       # Regenerate TypeScript types from the linked project
 npm run supabase:stop        # Stop the local Supabase stack
 ```
 
 Link credentials and database passwords are stored locally and must never be
 committed. See `docs/supabase-architecture.md` for the planned data model and
 migration sequence.
+
+Run `npm run supabase:types` after applying schema migrations. Commit the
+generated `src/types/database.ts` file so frontend database queries and RPC
+calls are checked against the current schema.
 
 Cloudflare Pages must define `VITE_SUPABASE_URL` and
 `VITE_SUPABASE_PUBLISHABLE_KEY` for both Preview and Production deployments.
