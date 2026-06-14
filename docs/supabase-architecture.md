@@ -72,6 +72,24 @@ Join tables preserve the many-to-many relationships already supported by the
 frontend. Session participant tables also store name and employee-number
 snapshots so historical reports do not change when master data is edited.
 
+Starting a session uses the `start_production_session` database function. It
+creates the session, room links, supervisor links, and employee links in one
+transaction. If any selected record is invalid, none of the rows are saved.
+
+The live workflow uses database functions for its writes:
+
+- `add_session_employee`
+- `remove_session_employee`
+- `record_weight_entry`
+- `update_weight_entry`
+- `delete_weight_entry`
+- `complete_production_session`
+
+Weight entries and session participants are soft-removed so existing production
+records remain traceable. A completed session is the archive record; the data is
+not copied into a second archive table. Session and employee totals are derived
+from active weight entries.
+
 ### Audit
 
 - `audit_logs`
@@ -91,8 +109,10 @@ API.
 
 - Authenticated active users may read the operational data needed by the app.
 - Admins may manage profiles and master data.
-- Admins and supervisors may create, update, complete, and archive sessions.
-- Operators may update active sessions they are assigned to.
+- Admins may manage all sessions.
+- Supervisors may create and operate sessions to which they are assigned.
+- Operators may read sessions in which they participated and only their own
+  employee and weight-entry rows.
 - The browser receives only the project URL and publishable key.
 - Secret or service-role keys must never be placed in Vite environment
   variables or committed to Git.
