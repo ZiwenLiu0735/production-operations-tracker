@@ -9,13 +9,15 @@ weight entry, session summaries, archive management, and exports.
 - React 19, TypeScript, and Vite
 - Tailwind CSS v4 and Ant Design
 - React Router
-- Browser `localStorage` for the current application data
+- Supabase Auth for user login and role-based access
+- Supabase for facilities, rooms, employees, and supervisor profiles
+- Browser `localStorage` for active sessions and archives during the current migration phase
 - PDF and spreadsheet exports
 
-The application is being prepared for a future Supabase backend. Supabase is not
-currently connected to the active user workflow. The repository is linked to a
-hosted Supabase project, and the database schema will be managed through SQL
-migrations in `supabase/migrations`.
+The backend migration is in progress. Authentication and master-data reads use
+the hosted Supabase project. Active sessions, weight entries, archives, and
+exports still use the existing browser-local workflow until their repository
+layers are connected.
 
 ## Requirements
 
@@ -150,8 +152,8 @@ never expose a Supabase secret or service-role key.
 
 - Review and edit completed sessions
 - Preserve an audit trail for archive changes
-- Manage facilities, rooms, supervisors, and employees
-- Import and export local backups
+- View remote facilities, rooms, supervisors, and employees
+- Admin master-data editing is the next migration step
 
 ## Development Workflow
 

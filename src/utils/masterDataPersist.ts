@@ -4,16 +4,26 @@ import { markMasterDataModified } from "./backup";
 
 export const MASTER_DATA_STORAGE_KEY = "trimtrack-master-data";
 
+type EmployeeWithLegacyNickname = MasterData["employees"][number] & {
+  nickname?: string;
+};
+
 export function normalizeMasterData(data: MasterData): MasterData {
   return {
     employees: data.employees.map((e) => ({
-      ...e,
+      id: e.id,
+      employeeNumber: e.employeeNumber,
+      legalName: e.legalName,
       active: e.active ?? true,
-      nickname: e.nickname?.trim() || undefined,
+      preferredName:
+        e.preferredName?.trim() ||
+        (e as EmployeeWithLegacyNickname).nickname?.trim() ||
+        undefined,
     })),
     facilities: data.facilities.map((f) => ({
-      ...f,
-      code: f.code ?? f.name.slice(0, 3).toUpperCase(),
+      id: f.id,
+      name: f.name,
+      active: f.active ?? true,
     })),
     rooms: [...data.rooms],
     supervisors: data.supervisors.map((s) => ({ ...s, active: s.active ?? true })),
@@ -29,7 +39,7 @@ export function loadMasterData(): MasterData {
   } catch {
     localStorage.removeItem(MASTER_DATA_STORAGE_KEY);
   }
-  return normalizeMasterData(defaultMasterData as MasterData);
+  return normalizeMasterData(defaultMasterData as unknown as MasterData);
 }
 
 export function persistMasterData(data: MasterData) {

@@ -2,9 +2,8 @@ export type TrimCategory = "regular" | "stick" | "smalls";
 
 export interface Facility {
   id: string;
-  code: string;
   name: string;
-  active?: boolean;
+  active: boolean;
 }
 
 export interface Room {
@@ -24,7 +23,7 @@ export interface Employee {
   id: string;
   employeeNumber: number;
   legalName: string;
-  nickname?: string;
+  preferredName?: string;
   active: boolean;
 }
 

@@ -213,7 +213,7 @@ export function LiveSessionPage() {
       id: employee.id,
       employeeNumber: employee.employeeNumber,
       legalName: employee.legalName,
-      nickname: employee.nickname,
+      nickname: employee.preferredName,
     });
     setShowAddEmployee(false);
     setActiveEmployeeId(employee.id);

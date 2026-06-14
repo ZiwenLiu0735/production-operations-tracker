@@ -1,15 +1,13 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppNav } from "../components/AppNav";
 import { Button } from "../components/Button";
-import { ImportBackupModal } from "../components/ImportBackupModal";
 import { Layout } from "../components/Layout";
 import { EmployeesTab } from "../components/settings/EmployeesTab";
 import { FacilitiesTab } from "../components/settings/FacilitiesTab";
 import { RoomsTab } from "../components/settings/RoomsTab";
 import { SupervisorsTab } from "../components/settings/SupervisorsTab";
 import { useMasterData } from "../context/MasterDataContext";
-import { backupFilename } from "../utils/backup";
 
 type SettingsTab = "employees" | "facilities" | "rooms" | "supervisors";
 
@@ -22,62 +20,13 @@ const TABS: { id: SettingsTab; label: string }[] = [
 
 export function SettingsPage() {
   const navigate = useNavigate();
-  const {
-    exportBackup,
-    importBackup,
-    resetToDefaults,
-    needsBackupReminder,
-    dismissBackupReminder,
-  } = useMasterData();
+  const { reload } = useMasterData();
   const [activeTab, setActiveTab] = useState<SettingsTab>("employees");
-  const [status, setStatus] = useState<string | null>(null);
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [pendingImport, setPendingImport] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  function showStatus(message: string) {
-    setStatus(message);
-    setTimeout(() => setStatus(null), 3000);
-  }
-
-  function handleExportBackup() {
-    exportBackup();
-    showStatus(`Backup downloaded (${backupFilename()})`);
-  }
-
-  function handleImportFile(file: File) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      setPendingImport(String(reader.result));
-      setShowImportModal(true);
-    };
-    reader.readAsText(file);
-  }
-
-  function handleConfirmImport() {
-    if (!pendingImport) return;
-    try {
-      importBackup(pendingImport);
-      showStatus("Backup imported — master data replaced");
-    } catch {
-      alert("Invalid backup file. Please select a Production Operations Tracker backup JSON file.");
-    } finally {
-      setShowImportModal(false);
-      setPendingImport(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  }
-
-  function handleCancelImport() {
-    setShowImportModal(false);
-    setPendingImport(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }
 
   return (
     <Layout
       title="Settings"
-      subtitle="Manage master data"
+      subtitle="View master data"
       onBack={() => navigate("/")}
       backLabel="Back"
       headerRight={<AppNav />}
@@ -89,7 +38,9 @@ export function SettingsPage() {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`tt-settings-tab shrink-0 ${activeTab === tab.id ? "tt-settings-tab--active" : ""}`}
+              className={`tt-settings-tab shrink-0 ${
+                activeTab === tab.id ? "tt-settings-tab--active" : ""
+              }`}
             >
               {tab.label}
             </button>
@@ -98,44 +49,14 @@ export function SettingsPage() {
 
         <div className="flex-1 overflow-y-auto p-6">
           <div className="mx-auto max-w-3xl space-y-6">
-            {needsBackupReminder && (
-              <div className="rounded-xl border border-amber-500/40 bg-amber-600/10 px-4 py-3">
-                <p className="text-sm text-amber-100">
-                  Your settings have changed. Consider exporting a backup.
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button size="md" onClick={handleExportBackup}>
-                    Export Backup
-                  </Button>
-                  <Button size="md" variant="ghost" onClick={dismissBackupReminder}>
-                    Dismiss
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            <section className="tt-surface-card tt-surface-card--elevated px-4 py-4">
-              <h2 className="text-sm font-bold text-white">Backup & Restore</h2>
+            <section className="rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-4">
+              <h2 className="text-sm font-bold text-blue-100">
+                Supabase read-only mode
+              </h2>
               <p className="mt-1 text-sm text-white/50">
-                Master data is saved in this browser only ({window.location.origin}). Export a
-                backup before switching devices, browsers, or clearing storage.
+                These records are loaded from the remote database. Admin editing
+                will be enabled in the next implementation step.
               </p>
-              <p className="mt-2 text-xs text-white/40">
-                Backup includes employees, facilities, rooms, supervisors, and app settings.
-                File: {backupFilename()}
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Button size="md" variant="secondary" onClick={handleExportBackup}>
-                  Export Backup
-                </Button>
-                <Button
-                  size="md"
-                  variant="secondary"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  Import Backup
-                </Button>
-              </div>
             </section>
 
             {activeTab === "employees" && <EmployeesTab />}
@@ -146,39 +67,13 @@ export function SettingsPage() {
         </div>
 
         <div className="shrink-0 border-t border-surface-600/50 bg-surface-900 px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <div className="mx-auto flex max-w-3xl flex-wrap gap-2">
-            <Button
-              size="md"
-              variant="danger"
-              onClick={() => {
-                if (confirm("Reset all master data to defaults? This cannot be undone.")) {
-                  resetToDefaults();
-                  showStatus("Reset to defaults");
-                }
-              }}
-            >
-              Reset Defaults
+          <div className="mx-auto max-w-3xl">
+            <Button size="md" variant="secondary" onClick={() => void reload()}>
+              Refresh Data
             </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="application/json,.json"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleImportFile(file);
-              }}
-            />
           </div>
-          {status && (
-            <p className="mx-auto mt-2 max-w-3xl text-center text-sm text-brand-400">{status}</p>
-          )}
         </div>
       </div>
-
-      {showImportModal && (
-        <ImportBackupModal onConfirm={handleConfirmImport} onClose={handleCancelImport} />
-      )}
     </Layout>
   );
 }

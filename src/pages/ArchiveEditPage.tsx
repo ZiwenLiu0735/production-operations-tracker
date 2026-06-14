@@ -122,7 +122,7 @@ export function ArchiveEditPage() {
               >
                 {facilities.map((facility) => (
                   <option key={facility.id} value={facility.id}>
-                    {facility.code} — {facility.name}
+                    {facility.name}
                   </option>
                 ))}
               </select>

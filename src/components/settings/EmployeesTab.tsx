@@ -1,141 +1,49 @@
-import { useState } from "react";
-import { sortEmployeesByNumber } from "../../utils/employees";
-import { Button } from "../Button";
 import { useMasterData } from "../../context/MasterDataContext";
-import {
-  ActiveToggle,
-  SettingsCard,
-  SettingsField,
-  SettingsPanel,
-  inputClass,
-} from "./SettingsUi";
+import { sortEmployeesByNumber } from "../../utils/employees";
+import { SettingsCard, SettingsPanel } from "./SettingsUi";
 
 export function EmployeesTab() {
-  const { employees, addEmployee, updateEmployee, deleteEmployee } = useMasterData();
-  const [employeeNumber, setEmployeeNumber] = useState("");
-  const [legalName, setLegalName] = useState("");
-  const [nickname, setNickname] = useState("");
-
-  function handleAdd() {
-    const num = parseInt(employeeNumber, 10);
-    if (!num || !legalName.trim()) return;
-    if (employees.some((e) => e.employeeNumber === num)) {
-      alert("Employee ID already exists");
-      return;
-    }
-    addEmployee({
-      employeeNumber: num,
-      legalName: legalName.trim(),
-      nickname: nickname.trim() || undefined,
-      active: true,
-    });
-    setEmployeeNumber("");
-    setLegalName("");
-    setNickname("");
-  }
-
-  const sorted = sortEmployeesByNumber(employees);
+  const { employees } = useMasterData();
 
   return (
     <SettingsPanel
       title="Employees"
-      description="Manage trim room employees. Only active employees appear in session setup."
+      description="Employees currently stored in Supabase."
     >
-      <SettingsCard>
-        <p className="mb-3 text-sm font-semibold text-white/70">Add Employee</p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <SettingsField label="Employee ID">
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={employeeNumber}
-              onChange={(e) => setEmployeeNumber(e.target.value.replace(/\D/g, ""))}
-              className={inputClass}
-              placeholder="23"
-            />
-          </SettingsField>
-          <SettingsField label="Legal Name">
-            <input
-              value={legalName}
-              onChange={(e) => setLegalName(e.target.value)}
-              className={inputClass}
-              placeholder="Deyou Xu"
-            />
-          </SettingsField>
-          <SettingsField label="Nickname (optional)">
-            <input
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              className={inputClass}
-              placeholder="John"
-            />
-          </SettingsField>
-        </div>
-        <Button size="md" className="mt-3" onClick={handleAdd}>
-          Add Employee
-        </Button>
-      </SettingsCard>
-
       <div className="space-y-2">
-        {sorted.map((employee) => (
+        {sortEmployeesByNumber(employees).map((employee) => (
           <SettingsCard key={employee.id}>
-            <div className="flex flex-wrap items-start gap-3">
-              <div className="grid min-w-0 flex-1 grid-cols-1 gap-2 sm:grid-cols-3">
-                <SettingsField label="Employee ID">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={String(employee.employeeNumber)}
-                    onChange={(e) => {
-                      const num = parseInt(e.target.value.replace(/\D/g, ""), 10);
-                      if (num > 0) updateEmployee(employee.id, { employeeNumber: num });
-                    }}
-                    className={inputClass}
-                  />
-                </SettingsField>
-                <SettingsField label="Legal Name">
-                  <input
-                    value={employee.legalName}
-                    onChange={(e) =>
-                      updateEmployee(employee.id, { legalName: e.target.value })
-                    }
-                    className={inputClass}
-                  />
-                </SettingsField>
-                <SettingsField label="Nickname (optional)">
-                  <input
-                    value={employee.nickname ?? ""}
-                    onChange={(e) =>
-                      updateEmployee(employee.id, {
-                        nickname: e.target.value.trim() || undefined,
-                      })
-                    }
-                    className={inputClass}
-                  />
-                </SettingsField>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="font-semibold text-white">
+                  #{employee.employeeNumber} {employee.legalName}
+                </p>
+                {employee.preferredName && (
+                  <p className="text-sm text-white/50">
+                    Preferred name: {employee.preferredName}
+                  </p>
+                )}
               </div>
-              <div className="flex shrink-0 flex-col gap-2">
-                <ActiveToggle
-                  active={employee.active}
-                  onChange={(active) => updateEmployee(employee.id, { active })}
-                />
-                <Button
-                  variant="danger"
-                  size="md"
-                  onClick={() => {
-                    if (confirm(`Delete employee #${employee.employeeNumber}?`)) {
-                      deleteEmployee(employee.id);
-                    }
-                  }}
-                >
-                  Delete
-                </Button>
-              </div>
+              <StatusBadge active={employee.active} />
             </div>
           </SettingsCard>
         ))}
+        {employees.length === 0 && (
+          <p className="text-sm text-white/40">No employees configured.</p>
+        )}
       </div>
     </SettingsPanel>
+  );
+}
+
+function StatusBadge({ active }: { active: boolean }) {
+  return (
+    <span
+      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+        active ? "bg-brand-600/20 text-brand-400" : "bg-surface-700 text-white/40"
+      }`}
+    >
+      {active ? "Active" : "Inactive"}
+    </span>
   );
 }

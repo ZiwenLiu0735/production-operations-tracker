@@ -19,7 +19,7 @@ export function getSessionEmployees(
           id: snapshot.id,
           employeeNumber: snapshot.employeeNumber,
           legalName: snapshot.legalName,
-          nickname: snapshot.nickname,
+          preferredName: snapshot.nickname,
           active: true,
         };
       }
