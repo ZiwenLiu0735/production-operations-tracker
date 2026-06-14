@@ -9,21 +9,37 @@ import {
 } from "react";
 import type { Employee, Facility, MasterData, Room, Supervisor } from "../types";
 import {
+  createFacility as createFacilityRecord,
+  createRoom as createRoomRecord,
   getMasterData,
+  updateFacility as updateFacilityRecord,
+  updateRoom as updateRoomRecord,
   type RemoteMasterData,
 } from "../repositories/masterDataRepository";
 import { sortEmployeesByNumber } from "../utils/employees";
 
 interface MasterDataContextValue {
   employees: Employee[];
+  operators: Employee[];
   facilities: Facility[];
   rooms: Room[];
   supervisors: Supervisor[];
   activeEmployees: Employee[];
+  activeOperators: Employee[];
   activeSupervisors: Supervisor[];
   loading: boolean;
   error: string | null;
   reload: () => Promise<void>;
+  createFacility: (name: string) => Promise<void>;
+  updateFacility: (
+    id: string,
+    updates: { name?: string; active?: boolean },
+  ) => Promise<void>;
+  createRoom: (input: { facilityId: string; name: string }) => Promise<void>;
+  updateRoom: (
+    id: string,
+    updates: { facilityId?: string; name?: string; active?: boolean },
+  ) => Promise<void>;
 }
 
 const MasterDataContext = createContext<MasterDataContextValue | null>(null);
@@ -34,6 +50,10 @@ const EMPTY_MASTER_DATA: MasterData = {
   rooms: [],
   supervisors: [],
 };
+
+interface MasterDataState extends MasterData {
+  operators: Employee[];
+}
 
 function toMasterData(remote: RemoteMasterData): MasterData {
   return {
@@ -48,8 +68,18 @@ function toMasterData(remote: RemoteMasterData): MasterData {
   };
 }
 
+function toMasterDataState(remote: RemoteMasterData): MasterDataState {
+  return {
+    ...toMasterData(remote),
+    operators: remote.operators,
+  };
+}
+
 export function MasterDataProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<MasterData>(EMPTY_MASTER_DATA);
+  const [data, setData] = useState<MasterDataState>({
+    ...EMPTY_MASTER_DATA,
+    operators: [],
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,7 +87,7 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      setData(toMasterData(await getMasterData()));
+      setData(toMasterDataState(await getMasterData()));
     } catch (loadError) {
       setError(
         loadError instanceof Error
@@ -74,7 +104,7 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
 
     void getMasterData()
       .then((remote) => {
-        if (active) setData(toMasterData(remote));
+        if (active) setData(toMasterDataState(remote));
       })
       .catch((loadError: unknown) => {
         if (!active) return;
@@ -93,6 +123,57 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const createFacility = useCallback(async (name: string) => {
+    const facility = await createFacilityRecord(name);
+    setData((current) => ({
+      ...current,
+      facilities: [...current.facilities, facility],
+    }));
+  }, []);
+
+  const updateFacility = useCallback(
+    async (
+      id: string,
+      updates: { name?: string; active?: boolean },
+    ) => {
+      const facility = await updateFacilityRecord(id, updates);
+      setData((current) => ({
+        ...current,
+        facilities: current.facilities.map((item) =>
+          item.id === facility.id ? facility : item,
+        ),
+      }));
+    },
+    [],
+  );
+
+  const createRoom = useCallback(
+    async (input: { facilityId: string; name: string }) => {
+      const room = await createRoomRecord(input);
+      setData((current) => ({
+        ...current,
+        rooms: [...current.rooms, room],
+      }));
+    },
+    [],
+  );
+
+  const updateRoom = useCallback(
+    async (
+      id: string,
+      updates: { facilityId?: string; name?: string; active?: boolean },
+    ) => {
+      const room = await updateRoomRecord(id, updates);
+      setData((current) => ({
+        ...current,
+        rooms: current.rooms.map((item) =>
+          item.id === room.id ? room : item,
+        ),
+      }));
+    },
+    [],
+  );
+
   const employees = useMemo(
     () => sortEmployeesByNumber(data.employees),
     [data.employees],
@@ -103,6 +184,16 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
     [data.employees],
   );
 
+  const operators = useMemo(
+    () => sortEmployeesByNumber(data.operators),
+    [data.operators],
+  );
+
+  const activeOperators = useMemo(
+    () => sortEmployeesByNumber(data.operators.filter((employee) => employee.active)),
+    [data.operators],
+  );
+
   const activeSupervisors = useMemo(
     () => data.supervisors.filter((s) => s.active),
     [data.supervisors],
@@ -111,23 +202,35 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       employees,
+      operators,
       facilities: data.facilities,
       rooms: data.rooms,
       supervisors: data.supervisors,
       activeEmployees,
+      activeOperators,
       activeSupervisors,
       loading,
       error,
       reload,
+      createFacility,
+      updateFacility,
+      createRoom,
+      updateRoom,
     }),
     [
       data,
       employees,
+      operators,
       activeEmployees,
+      activeOperators,
       activeSupervisors,
       loading,
       error,
       reload,
+      createFacility,
+      updateFacility,
+      createRoom,
+      updateRoom,
     ],
   );
 

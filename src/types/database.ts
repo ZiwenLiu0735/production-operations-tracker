@@ -499,6 +499,18 @@ export type Database = {
       is_active_user: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_supervisor_or_admin: { Args: never; Returns: boolean }
+      list_operator_employees: {
+        Args: never
+        Returns: {
+          active: boolean
+          created_at: string
+          employee_number: number
+          id: string
+          legal_name: string
+          preferred_name: string | null
+          updated_at: string
+        }[]
+      }
       record_weight_entry: {
         Args: {
           target_category: Database["public"]["Enums"]["trim_category"]

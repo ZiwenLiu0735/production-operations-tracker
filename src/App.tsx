@@ -52,6 +52,19 @@ function OperationalRoutes() {
               <OfflineIndicator />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
+                <Route
+                  path="/"
+                  element={
+                    <Navigate
+                      to={
+                        profile?.role === "admin"
+                          ? "/settings"
+                          : START_SESSION_PATH
+                      }
+                      replace
+                    />
+                  }
+                />
                 <Route path={START_SESSION_PATH} element={<StartSessionPage />} />
                 <Route path={TRIM_TRACK_LIVE_PATH} element={<LiveSessionPage />} />
                 <Route path={HOURLY_TRACK_PATH} element={<HourlyTrackPage />} />
@@ -89,7 +102,7 @@ function OperationalRoutes() {
                   path="/hourly-track/:sessionId"
                   element={<Navigate to={HOURLY_TRACK_PATH} replace />}
                 />
-                <Route path="*" element={<Navigate to={START_SESSION_PATH} replace />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Suspense>
             </SessionProvider>

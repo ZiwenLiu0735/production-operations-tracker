@@ -153,7 +153,8 @@ never expose a Supabase secret or service-role key.
 - Review and edit completed sessions
 - Preserve an audit trail for archive changes
 - View remote facilities, rooms, supervisors, and employees
-- Admin master-data editing is the next migration step
+- Admins can manage facilities and rooms in Supabase
+- Employee and profile editing remain read-only during the migration
 
 ## Development Workflow
 

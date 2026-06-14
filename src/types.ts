@@ -10,7 +10,7 @@ export interface Room {
   id: string;
   facilityId: string;
   name: string;
-  active?: boolean;
+  active: boolean;
 }
 
 export interface Supervisor {

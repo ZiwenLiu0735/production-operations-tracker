@@ -1,4 +1,4 @@
-export const START_SESSION_PATH = "/";
+export const START_SESSION_PATH = "/start-session";
 export const TRIM_TRACK_LIVE_PATH = "/trim-track/live";
 export const HOURLY_TRACK_PATH = "/hourly-track";
 export const SUMMARY_PATH = "/summary";

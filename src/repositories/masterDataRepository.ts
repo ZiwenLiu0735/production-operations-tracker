@@ -52,6 +52,7 @@ export interface RemoteMasterData {
   facilities: FacilityRecord[];
   rooms: RoomRecord[];
   employees: EmployeeRecord[];
+  operators: EmployeeRecord[];
   supervisors: SupervisorRecord[];
 }
 
@@ -119,6 +120,37 @@ export async function getFacilities(): Promise<FacilityRecord[]> {
   return data.map(mapFacility);
 }
 
+export async function createFacility(name: string): Promise<FacilityRecord> {
+  const { data, error } = await supabase
+    .from("facilities")
+    .insert({ name: name.trim() })
+    .select()
+    .single();
+
+  if (error) throw queryError("facility", error.message);
+  return mapFacility(data);
+}
+
+export async function updateFacility(
+  id: string,
+  updates: { name?: string; active?: boolean },
+): Promise<FacilityRecord> {
+  const values: Database["public"]["Tables"]["facilities"]["Update"] = {};
+
+  if (updates.name !== undefined) values.name = updates.name.trim();
+  if (updates.active !== undefined) values.active = updates.active;
+
+  const { data, error } = await supabase
+    .from("facilities")
+    .update(values)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw queryError("facility", error.message);
+  return mapFacility(data);
+}
+
 export async function getRooms(): Promise<RoomRecord[]> {
   const { data, error } = await supabase
     .from("rooms")
@@ -129,6 +161,46 @@ export async function getRooms(): Promise<RoomRecord[]> {
   return data.map(mapRoom);
 }
 
+export async function createRoom(input: {
+  facilityId: string;
+  name: string;
+}): Promise<RoomRecord> {
+  const { data, error } = await supabase
+    .from("rooms")
+    .insert({
+      facility_id: input.facilityId,
+      name: input.name.trim(),
+    })
+    .select()
+    .single();
+
+  if (error) throw queryError("room", error.message);
+  return mapRoom(data);
+}
+
+export async function updateRoom(
+  id: string,
+  updates: { facilityId?: string; name?: string; active?: boolean },
+): Promise<RoomRecord> {
+  const values: Database["public"]["Tables"]["rooms"]["Update"] = {};
+
+  if (updates.facilityId !== undefined) {
+    values.facility_id = updates.facilityId;
+  }
+  if (updates.name !== undefined) values.name = updates.name.trim();
+  if (updates.active !== undefined) values.active = updates.active;
+
+  const { data, error } = await supabase
+    .from("rooms")
+    .update(values)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw queryError("room", error.message);
+  return mapRoom(data);
+}
+
 export async function getEmployees(): Promise<EmployeeRecord[]> {
   const { data, error } = await supabase
     .from("employees")
@@ -136,6 +208,13 @@ export async function getEmployees(): Promise<EmployeeRecord[]> {
     .order("employee_number");
 
   if (error) throw queryError("employees", error.message);
+  return data.map(mapEmployee);
+}
+
+export async function getOperators(): Promise<EmployeeRecord[]> {
+  const { data, error } = await supabase.rpc("list_operator_employees");
+
+  if (error) throw queryError("operators", error.message);
   return data.map(mapEmployee);
 }
 
@@ -163,6 +242,25 @@ export async function getMasterData(): Promise<RemoteMasterData> {
     getEmployees(),
     getSupervisors(),
   ]);
+  let operators: EmployeeRecord[];
 
-  return { facilities, rooms, employees, supervisors };
+  try {
+    operators = await getOperators();
+  } catch (error) {
+    if (
+      !(error instanceof Error) ||
+      !error.message.includes("list_operator_employees")
+    ) {
+      throw error;
+    }
+
+    const privilegedEmployeeIds = new Set(
+      supervisors.map((supervisor) => supervisor.employeeId),
+    );
+    operators = employees.filter(
+      (employee) => !privilegedEmployeeIds.has(employee.id),
+    );
+  }
+
+  return { facilities, rooms, employees, operators, supervisors };
 }

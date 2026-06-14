@@ -83,7 +83,7 @@ function SelectCard({
 export function StartSessionPage() {
   const navigate = useNavigate();
   const { session, startSession, endSession, clearSession } = useSession();
-  const { facilities, activeSupervisors, activeEmployees, rooms } = useMasterData();
+  const { facilities, activeSupervisors, activeOperators, rooms } = useMasterData();
 
   const [facilityId, setFacilityId] = useState("");
   const [selectedRoomIds, setSelectedRoomIds] = useState<string[]>([]);
@@ -105,9 +105,9 @@ export function StartSessionPage() {
   );
   const facilityHasRooms = facilityRooms.length > 0;
 
-  const filteredEmployees = useMemo(
-    () => filterEmployees(activeEmployees, searchQuery),
-    [activeEmployees, searchQuery],
+  const filteredOperators = useMemo(
+    () => filterEmployees(activeOperators, searchQuery),
+    [activeOperators, searchQuery],
   );
 
   useEffect(() => {
@@ -168,7 +168,7 @@ export function StartSessionPage() {
     if (!facility || supervisors.length === 0) return;
 
     const employees = selectedEmployeeIds
-      .map((id) => activeEmployees.find((employee) => employee.id === id))
+      .map((id) => activeOperators.find((employee) => employee.id === id))
       .filter((employee): employee is NonNullable<typeof employee> => employee !== undefined)
       .map((employee) => ({
         id: employee.id,
@@ -351,7 +351,7 @@ export function StartSessionPage() {
             </SectionCard>
 
             <SectionCard
-              title="Employees"
+              title="Operators"
               extra={
                 selectedEmployeeIds.length > 0 ? (
                   <Badge
@@ -374,15 +374,15 @@ export function StartSessionPage() {
                 style={{ marginBottom: 12, borderRadius: 12 }}
               />
 
-              {filteredEmployees.length === 0 ? (
+              {filteredOperators.length === 0 ? (
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description="No employees match your search"
+                  description="No operators match your search"
                   style={{ margin: "12px 0" }}
                 />
               ) : (
                 <Row gutter={[10, 10]}>
-                  {filteredEmployees.map((employee) => {
+                  {filteredOperators.map((employee) => {
                     const selected = selectedEmployeeIds.includes(employee.id);
                     return (
                       <Col key={employee.id} xs={12} sm={8}>

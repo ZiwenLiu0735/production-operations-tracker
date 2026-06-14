@@ -48,18 +48,24 @@ export function SettingsCard({ children }: SettingsCardProps) {
 interface ActiveToggleProps {
   active: boolean;
   onChange: (active: boolean) => void;
+  disabled?: boolean;
 }
 
-export function ActiveToggle({ active, onChange }: ActiveToggleProps) {
+export function ActiveToggle({
+  active,
+  onChange,
+  disabled = false,
+}: ActiveToggleProps) {
   return (
     <button
       type="button"
       onClick={() => onChange(!active)}
+      disabled={disabled}
       className={`min-h-10 rounded-lg px-4 text-sm font-semibold transition-colors touch-manipulation ${
         active
           ? "bg-brand-600/20 text-brand-400"
           : "bg-surface-700 text-white/40"
-      }`}
+      } disabled:pointer-events-none disabled:opacity-50`}
     >
       {active ? "Active" : "Inactive"}
     </button>
