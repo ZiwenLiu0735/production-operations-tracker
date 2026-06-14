@@ -47,6 +47,7 @@ export function EndSessionPage() {
   const { session, clearSession, resumeSession } = useSession();
   const { activeEmployees } = useMasterData();
   const [exportStatus, setExportStatus] = useState<string | null>(null);
+  const [renderedAt] = useState(Date.now);
 
   useEffect(() => {
     if (!session) {
@@ -66,7 +67,7 @@ export function EndSessionPage() {
   );
 
   const sessionGrandTotal = getGrandTotal(sessionTotals);
-  const sessionEndedAt = session?.endedAt ?? Date.now();
+  const sessionEndedAt = session?.endedAt ?? renderedAt;
 
   function handleBack() {
     resumeSession();

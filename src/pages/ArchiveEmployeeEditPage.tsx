@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AppNav } from "../components/AppNav";
 import { AuditTrailPanel } from "../components/AuditTrailPanel";
@@ -34,29 +34,18 @@ export function ArchiveEmployeeEditPage() {
   const employeeSnapshot = archived?.employees.find((employee) => employee.id === employeeId);
 
   const [editingEntry, setEditingEntry] = useState<ArchivedWeightEntry | null>(null);
-  const [categoryTotals, setCategoryTotals] = useState<Record<TrimCategory, string>>({
-    regular: "0",
-    stick: "0",
-    smalls: "0",
-  });
+  const [categoryTotalDrafts, setCategoryTotalDrafts] = useState<
+    Partial<Record<TrimCategory, string>>
+  >({});
   const [addingCategory, setAddingCategory] = useState<TrimCategory | null>(null);
   const [newEntryWeight, setNewEntryWeight] = useState("");
 
   const employee = employeeSnapshot ? snapshotToEmployee(employeeSnapshot) : null;
 
-  const activeEntries = useMemo(() => {
-    if (!archived || !employeeId) return [];
-    return getActiveEntries(archived.entries).filter((entry) => entry.employeeId === employeeId);
-  }, [archived, employeeId]);
-
-  useEffect(() => {
-    if (!employeeSnapshot) return;
-    setCategoryTotals({
-      regular: String(employeeSnapshot.totals.regular),
-      stick: String(employeeSnapshot.totals.stick),
-      smalls: String(employeeSnapshot.totals.smalls),
-    });
-  }, [employeeSnapshot]);
+  const activeEntries =
+    archived && employeeId
+      ? getActiveEntries(archived.entries).filter((entry) => entry.employeeId === employeeId)
+      : [];
 
   if (!archived || !employeeSnapshot || !employee) {
     return (
@@ -72,11 +61,17 @@ export function ArchiveEmployeeEditPage() {
   }
 
   function handleSaveCategoryTotal(category: TrimCategory) {
-    const parsed = parseWholeWeight(categoryTotals[category]);
+    const value = categoryTotalDrafts[category] ?? String(employeeSnapshot!.totals[category]);
+    const parsed = parseWholeWeight(value);
     if (parsed === null) return;
 
     runWithEditorName((editedBy) => {
       adjustCategoryTotal(archived!.id, employee!.id, category, parsed, editedBy);
+      setCategoryTotalDrafts((prev) => {
+        const next = { ...prev };
+        delete next[category];
+        return next;
+      });
     });
   }
 
@@ -131,9 +126,12 @@ export function ArchiveEmployeeEditPage() {
                 <div className="flex flex-wrap items-end gap-3">
                   <SettingsField label={`${CATEGORY_LABELS[category]} Total (g)`} className="min-w-0 flex-1">
                     <input
-                      value={categoryTotals[category]}
+                      value={
+                        categoryTotalDrafts[category] ??
+                        String(employeeSnapshot.totals[category])
+                      }
                       onChange={(e) =>
-                        setCategoryTotals((prev) => ({
+                        setCategoryTotalDrafts((prev) => ({
                           ...prev,
                           [category]: e.target.value.replace(/\D/g, ""),
                         }))

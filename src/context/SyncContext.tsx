@@ -48,10 +48,6 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     };
   }, [syncNow]);
 
-  useEffect(() => {
-    setPendingCount(pendingSyncCount());
-  }, [isOnline]);
-
   const value = useMemo(
     () => ({ isOnline, pendingCount, syncNow }),
     [isOnline, pendingCount, syncNow],

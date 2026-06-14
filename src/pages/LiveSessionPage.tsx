@@ -166,12 +166,10 @@ export function LiveSessionPage() {
       navigate(SUMMARY_PATH, { replace: true });
       return;
     }
-    if (!activeEmployeeId && sessionEmployees.length > 0) {
-      setActiveEmployeeId(sessionEmployees[0].id);
-    }
-  }, [session, sessionEmployees, activeEmployeeId, navigate]);
+  }, [session, navigate]);
 
-  const activeEmployee = sessionEmployees.find((e) => e.id === activeEmployeeId);
+  const resolvedActiveEmployeeId = activeEmployeeId || sessionEmployees[0]?.id || "";
+  const activeEmployee = sessionEmployees.find((e) => e.id === resolvedActiveEmployeeId);
   const parsedWeight = parseWholeWeight(weight);
 
   function handleEmployeeClick(employeeId: string) {
@@ -180,9 +178,9 @@ export function LiveSessionPage() {
   }
 
   function handleCategoryClick(category: TrimCategory) {
-    if (!activeEmployeeId || parsedWeight === null || !activeEmployee) return;
+    if (!resolvedActiveEmployeeId || parsedWeight === null || !activeEmployee) return;
 
-    addEntry(activeEmployeeId, category, parsedWeight);
+    addEntry(resolvedActiveEmployeeId, category, parsedWeight);
     setWeight("");
     setFlash(category);
     setTimeout(() => setFlash(null), 400);
@@ -222,8 +220,8 @@ export function LiveSessionPage() {
   }
 
   function handleRemoveEmployee() {
-    if (!activeEmployeeId) return;
-    const employee = sessionEmployees.find((item) => item.id === activeEmployeeId);
+    if (!resolvedActiveEmployeeId) return;
+    const employee = sessionEmployees.find((item) => item.id === resolvedActiveEmployeeId);
     if (
       !window.confirm(
         `Remove ${employee?.legalName ?? "this employee"} from the session? Existing entries will be kept.`,
@@ -231,7 +229,7 @@ export function LiveSessionPage() {
     ) {
       return;
     }
-    removeEmployee(activeEmployeeId);
+    removeEmployee(resolvedActiveEmployeeId);
     setActiveEmployeeId("");
   }
 
@@ -377,7 +375,7 @@ export function LiveSessionPage() {
             size="large"
             icon={<MinusCircleOutlined />}
             onClick={handleRemoveEmployee}
-            disabled={!activeEmployeeId}
+            disabled={!resolvedActiveEmployeeId}
           >
             Remove
           </Button>
@@ -430,7 +428,7 @@ export function LiveSessionPage() {
                 <Row gutter={[10, 10]} style={{ alignContent: "flex-start" }}>
                   {filteredSessionEmployees.map((employee) => {
                     const totals = getEmployeeTotals(employee.id, activeSession.entries);
-                    const isActive = employee.id === activeEmployeeId;
+                    const isActive = employee.id === resolvedActiveEmployeeId;
                     return (
                       <Col key={employee.id} xs={12} sm={8} lg={24}>
                         <LiveEmployeeCard

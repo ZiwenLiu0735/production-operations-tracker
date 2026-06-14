@@ -3,15 +3,19 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": "26.0.0",
+    "npm": "11.12.1"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "check": "npm run lint && npm run build",
     "preview": "vite preview"
   },
   "dependencies": {
     "@ant-design/icons": "^6.2.5",
-    "@supabase/supabase-js": "^2.107.0",
     "antd": "^6.4.3",
     "jspdf": "^4.2.1",
     "jszip": "^3.10.1",

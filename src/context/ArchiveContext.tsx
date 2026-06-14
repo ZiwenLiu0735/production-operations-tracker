@@ -90,10 +90,6 @@ export function ArchiveProvider({ children }: { children: ReactNode }) {
     setArchives(loadArchive());
   }, []);
 
-  useEffect(() => {
-    refreshArchives();
-  }, [refreshArchives]);
-
   const getArchive = useCallback(
     (id: string) => archives.find((session) => session.id === id) ?? null,
     [archives],
@@ -238,7 +234,7 @@ export function ArchiveProvider({ children }: { children: ReactNode }) {
         timestamp: entry.timestamp ?? current.startedAt,
       };
 
-      let next = appendAudit(
+      const next = appendAudit(
         {
           ...current,
           entries: [...current.entries, newEntry],
@@ -331,7 +327,7 @@ export function ArchiveProvider({ children }: { children: ReactNode }) {
       const existing = current.entries.find((entry) => entry.id === entryId && !entry.deletedAt);
       if (!existing) return null;
 
-      let next = appendAudit(
+      const next = appendAudit(
         {
           ...current,
           entries: current.entries.map((entry) =>
