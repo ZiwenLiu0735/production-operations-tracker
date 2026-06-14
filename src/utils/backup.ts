@@ -8,18 +8,18 @@ export const MASTER_DATA_MODIFIED_KEY = "trimtrack-master-data-modified";
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
-export interface TrimTrackAppSettings {
+export interface ProductionOperationsAppSettings {
   editorName?: string;
 }
 
-export interface TrimTrackBackup {
+export interface ProductionOperationsBackup {
   version: 1;
   exportedAt: string;
   employees: MasterData["employees"];
   facilities: MasterData["facilities"];
   rooms: MasterData["rooms"];
   supervisors: MasterData["supervisors"];
-  settings: TrimTrackAppSettings;
+  settings: ProductionOperationsAppSettings;
 }
 
 export function markMasterDataModified() {
@@ -55,7 +55,7 @@ export function shouldShowBackupReminder(): boolean {
   return hasChangesSinceBackup && noRecentBackup;
 }
 
-export function buildBackupPayload(data: MasterData): TrimTrackBackup {
+export function buildBackupPayload(data: MasterData): ProductionOperationsBackup {
   const normalized = normalizeMasterData(data);
   return {
     version: 1,
@@ -71,16 +71,16 @@ export function buildBackupPayload(data: MasterData): TrimTrackBackup {
 }
 
 export function backupFilename(date = new Date()): string {
-  return `trimtrack-backup-${formatDateShort(date.getTime())}.json`;
+  return `production-operations-tracker-backup-${formatDateShort(date.getTime())}.json`;
 }
 
 export function serializeBackup(data: MasterData): string {
   return JSON.stringify(buildBackupPayload(data), null, 2);
 }
 
-function isTrimTrackBackup(value: unknown): value is TrimTrackBackup {
+function isProductionOperationsBackup(value: unknown): value is ProductionOperationsBackup {
   if (!value || typeof value !== "object") return false;
-  const backup = value as TrimTrackBackup;
+  const backup = value as ProductionOperationsBackup;
   return (
     backup.version === 1 &&
     Array.isArray(backup.employees) &&
@@ -92,12 +92,12 @@ function isTrimTrackBackup(value: unknown): value is TrimTrackBackup {
 
 export function parseBackupJson(json: string): {
   masterData: MasterData;
-  settings: TrimTrackAppSettings;
+  settings: ProductionOperationsAppSettings;
   exportedAt: number | null;
 } {
   const parsed = JSON.parse(json) as unknown;
 
-  if (isTrimTrackBackup(parsed)) {
+  if (isProductionOperationsBackup(parsed)) {
     const masterData = normalizeMasterData({
       employees: parsed.employees,
       facilities: parsed.facilities,
@@ -115,7 +115,7 @@ export function parseBackupJson(json: string): {
   return { masterData, settings: {}, exportedAt: null };
 }
 
-export function applyBackupSettings(settings: TrimTrackAppSettings) {
+export function applyBackupSettings(settings: ProductionOperationsAppSettings) {
   if (settings.editorName) {
     setEditorName(settings.editorName);
   }

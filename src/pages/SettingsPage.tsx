@@ -60,7 +60,7 @@ export function SettingsPage() {
       importBackup(pendingImport);
       showStatus("Backup imported — master data replaced");
     } catch {
-      alert("Invalid backup file. Please select a TrimTrack backup JSON file.");
+      alert("Invalid backup file. Please select a Production Operations Tracker backup JSON file.");
     } finally {
       setShowImportModal(false);
       setPendingImport(null);

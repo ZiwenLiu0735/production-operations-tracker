@@ -1,6 +1,6 @@
 import { theme, type ThemeConfig } from "antd";
 
-export const trimTrackTheme: ThemeConfig = {
+export const productionOperationsTheme: ThemeConfig = {
   algorithm: theme.darkAlgorithm,
   token: {
     colorPrimary: "#34d399",
