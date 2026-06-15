@@ -19,7 +19,6 @@ import { useNavigate } from "react-router-dom";
 import { EmployeeIdentity } from "../components/EmployeeIdentity";
 import { Layout } from "../components/Layout";
 import { SessionInfoHeader } from "../components/SessionInfoHeader";
-import { useArchiveRefreshOnMount } from "../context/ArchiveContext";
 import { useSession } from "../context/SessionContext";
 import { useMasterData } from "../context/MasterDataContext";
 import type { Session } from "../types";
@@ -42,7 +41,6 @@ const CATEGORY_COLORS = {
 };
 
 export function EndSessionPage() {
-  useArchiveRefreshOnMount();
   const navigate = useNavigate();
   const { session, clearSession } = useSession();
   const { activeEmployees } = useMasterData();
