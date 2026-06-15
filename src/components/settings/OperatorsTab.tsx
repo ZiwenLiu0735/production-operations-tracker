@@ -2,16 +2,16 @@ import { useMasterData } from "../../context/MasterDataContext";
 import { sortEmployeesByNumber } from "../../utils/employees";
 import { SettingsCard, SettingsPanel } from "./SettingsUi";
 
-export function EmployeesTab() {
-  const { employees } = useMasterData();
+export function OperatorsTab() {
+  const { operators } = useMasterData();
 
   return (
     <SettingsPanel
-      title="Employees"
-      description="Employees currently stored in Supabase."
+      title="Operators"
+      description="Employees without a supervisor or admin role."
     >
       <div className="space-y-2">
-        {sortEmployeesByNumber(employees).map((employee) => (
+        {sortEmployeesByNumber(operators).map((employee) => (
           <SettingsCard key={employee.id}>
             <div className="flex items-center justify-between gap-4">
               <div>
@@ -28,8 +28,8 @@ export function EmployeesTab() {
             </div>
           </SettingsCard>
         ))}
-        {employees.length === 0 && (
-          <p className="text-sm text-white/40">No employees configured.</p>
+        {operators.length === 0 && (
+          <p className="text-sm text-white/40">No operators configured.</p>
         )}
       </div>
     </SettingsPanel>

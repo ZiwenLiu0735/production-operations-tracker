@@ -8,7 +8,7 @@ export function SupervisorsTab() {
   return (
     <SettingsPanel
       title="Supervisors"
-      description="Active supervisor and admin profiles currently stored in Supabase."
+      description="Profiles with the supervisor role."
     >
       <div className="space-y-2">
         {sorted.map((supervisor) => (

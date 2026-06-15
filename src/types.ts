@@ -19,6 +19,15 @@ export interface Supervisor {
   active: boolean;
 }
 
+export interface ProfileDirectoryMember {
+  profileId: string;
+  employeeId: string;
+  employeeNumber: number;
+  name: string;
+  active: boolean;
+  role: "admin" | "supervisor";
+}
+
 export interface Employee {
   id: string;
   employeeNumber: number;
