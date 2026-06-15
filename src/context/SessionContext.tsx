@@ -13,6 +13,10 @@ import {
   recordWeightEntry,
   updateWeightEntry,
 } from "../repositories/weightEntryRepository";
+import {
+  completeProductionSession,
+  getProductionSession,
+} from "../repositories/sessionRepository";
 import { archiveSession } from "../utils/archive";
 import { joinRoomNames, joinSupervisorNames } from "../utils/sessionDisplay";
 import { getNewestEntry } from "../utils/sessionEntries";
@@ -46,8 +50,7 @@ interface SessionContextValue {
   undoLastEntry: () => Promise<WeightEntry | null>;
   addEmployee: (employee: SessionEmployeeSnapshot) => void;
   removeEmployee: (employeeId: string) => void;
-  endSession: () => void;
-  resumeSession: () => void;
+  endSession: () => Promise<Session>;
   clearSession: () => void;
   reloadFromStorage: () => void;
 }
@@ -277,27 +280,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const endSession = useCallback(() => {
-    setSession((prev) => {
-      if (!prev || prev.endedAt) return prev;
-      const ended = { ...prev, endedAt: Date.now() };
-      commitSession(ended);
-      archiveSession(ended);
-      enqueueSync("session_archived", ended.id);
-      processSyncQueue();
-      return ended;
-    });
-  }, []);
+  const endSession = useCallback(async () => {
+    if (!session) {
+      throw new Error("No active session is available.");
+    }
+    if (session.endedAt) return session;
 
-  const resumeSession = useCallback(() => {
-    setSession((prev) => {
-      if (!prev) return prev;
-      const rest = { ...prev };
-      delete rest.endedAt;
-      commitSession(rest);
-      return rest;
-    });
-  }, []);
+    await completeProductionSession(session.id);
+    const completedSession = await getProductionSession(session.id);
+
+    commitSession(completedSession);
+    archiveSession(completedSession);
+    enqueueSync("session_archived", completedSession.id);
+    processSyncQueue();
+    setSession(completedSession);
+    return completedSession;
+  }, [session]);
 
   const clearSession = useCallback(() => {
     commitSession(null);
@@ -316,7 +314,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       addEmployee,
       removeEmployee,
       endSession,
-      resumeSession,
       clearSession,
       reloadFromStorage,
     }),
@@ -331,7 +328,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       addEmployee,
       removeEmployee,
       endSession,
-      resumeSession,
       clearSession,
       reloadFromStorage,
     ],
