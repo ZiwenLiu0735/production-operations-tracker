@@ -22,15 +22,15 @@ import { SessionInfoHeader } from "../components/SessionInfoHeader";
 import { useArchiveRefreshOnMount } from "../context/ArchiveContext";
 import { useSession } from "../context/SessionContext";
 import { useMasterData } from "../context/MasterDataContext";
+import type { Session } from "../types";
 import { getEmployeeTotals, getGrandTotal, getSessionTotals } from "../types";
+import { getProductionSession } from "../repositories/sessionRepository";
 import { sortEmployeesByNumber } from "../utils/employees";
 import { exportRawDataCSV } from "../utils/export";
 import { formatDate, formatDuration, formatLbs, formatWeight, formatWeightWithLbs } from "../utils/format";
 import { getSessionEmployees } from "../utils/sessionEmployees";
 import {
-  HOURLY_TRACK_PATH,
   START_SESSION_PATH,
-  TRIM_TRACK_LIVE_PATH,
 } from "../lib/sessionRoutes";
 
 const { Text } = Typography;
@@ -44,35 +44,57 @@ const CATEGORY_COLORS = {
 export function EndSessionPage() {
   useArchiveRefreshOnMount();
   const navigate = useNavigate();
-  const { session, clearSession, resumeSession } = useSession();
+  const { session, clearSession } = useSession();
   const { activeEmployees } = useMasterData();
+  const [summarySession, setSummarySession] = useState<Session | null>(null);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(true);
   const [exportStatus, setExportStatus] = useState<string | null>(null);
-  const [renderedAt] = useState(Date.now);
 
   useEffect(() => {
     if (!session) {
       navigate(START_SESSION_PATH, { replace: true });
+      return;
     }
+
+    let cancelled = false;
+
+    void getProductionSession(session.id)
+      .then((remoteSession) => {
+        if (!cancelled) setSummarySession(remoteSession);
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setSummaryError(
+            error instanceof Error
+              ? error.message
+              : "Unable to load session summary.",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setSummaryLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [session, navigate]);
 
   const sessionEmployees = useMemo(() => {
-    if (!session) return [];
-    return getSessionEmployees(session, activeEmployees);
-  }, [session, activeEmployees]);
+    if (!summarySession) return [];
+    return getSessionEmployees(summarySession, activeEmployees);
+  }, [summarySession, activeEmployees]);
 
   const sessionTotals = useMemo(
     () =>
-      session ? getSessionTotals(session.entries) : { regular: 0, stick: 0, smalls: 0 },
-    [session],
+      summarySession
+        ? getSessionTotals(summarySession.entries)
+        : { regular: 0, stick: 0, smalls: 0 },
+    [summarySession],
   );
 
   const sessionGrandTotal = getGrandTotal(sessionTotals);
-  const sessionEndedAt = session?.endedAt ?? renderedAt;
-
-  function handleBack() {
-    resumeSession();
-    navigate(session?.workType === "trim" ? TRIM_TRACK_LIVE_PATH : HOURLY_TRACK_PATH);
-  }
 
   function handleNewSession() {
     clearSession();
@@ -80,11 +102,11 @@ export function EndSessionPage() {
   }
 
   async function handleEmployeeReceipts() {
-    if (!session) return;
+    if (!summarySession) return;
     setExportStatus("Generating employee receipts…");
     try {
       const { exportEmployeeReceiptPDFs } = await import("../utils/pdfExport");
-      await exportEmployeeReceiptPDFs(session, activeEmployees);
+      await exportEmployeeReceiptPDFs(summarySession, activeEmployees);
       setExportStatus(
         sessionEmployees.length === 1
           ? "Employee receipt downloaded"
@@ -98,10 +120,10 @@ export function EndSessionPage() {
   }
 
   async function handleSessionSummaryPdf() {
-    if (!session) return;
+    if (!summarySession) return;
     try {
       const { exportSessionSummaryPDF } = await import("../utils/pdfExport");
-      exportSessionSummaryPDF(session, activeEmployees);
+      exportSessionSummaryPDF(summarySession, activeEmployees);
       setExportStatus("Session summary PDF downloaded");
     } catch (err) {
       setExportStatus(err instanceof Error ? err.message : "Export failed");
@@ -110,28 +132,45 @@ export function EndSessionPage() {
   }
 
   function handleRawDataCsv() {
-    if (!session) return;
-    exportRawDataCSV(session, activeEmployees);
+    if (!summarySession) return;
+    exportRawDataCSV(summarySession, activeEmployees);
     setExportStatus("Raw data CSV downloaded");
     setTimeout(() => setExportStatus(null), 4000);
   }
 
-  if (!session) {
+  if (!session || summaryLoading) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-surface-900 text-white/50">
-        Loading…
+        Loading session summary…
       </div>
     );
   }
 
+  if (summaryError || !summarySession) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-surface-900 px-6">
+        <Alert
+          type="error"
+          showIcon
+          message="Session summary could not be loaded"
+          description={summaryError ?? "Supabase did not return the session."}
+          action={
+            <Button onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
+  const completedSession = summarySession;
   const sortedEmployees = sortEmployeesByNumber(sessionEmployees);
 
   return (
     <Layout
       title="Session Complete"
-      onBack={handleBack}
-      backLabel="Resume"
-      headerCenter={<SessionInfoHeader session={session} compact />}
+      headerCenter={<SessionInfoHeader session={completedSession} compact />}
     >
       <div className="flex flex-1 flex-col overflow-y-auto px-6 py-6">
         <div className="mx-auto w-full max-w-5xl">
@@ -154,7 +193,7 @@ export function EndSessionPage() {
               <Card size="small" className="tt-surface-card" style={{ height: "100%" }}>
                 <Statistic
                   title="Session Date"
-                  value={formatDate(session.startedAt)}
+                  value={formatDate(completedSession.startedAt)}
                   valueStyle={{ fontSize: 16, fontWeight: 600 }}
                   className="tt-summary-stat"
                 />
@@ -164,7 +203,10 @@ export function EndSessionPage() {
               <Card size="small" className="tt-surface-card" style={{ height: "100%" }}>
                 <Statistic
                   title="Duration"
-                  value={formatDuration(session.startedAt, sessionEndedAt)}
+                  value={formatDuration(
+                    completedSession.startedAt,
+                    completedSession.endedAt ?? completedSession.startedAt,
+                  )}
                   valueStyle={{ fontSize: 16, fontWeight: 600 }}
                   className="tt-summary-stat"
                 />
@@ -174,7 +216,7 @@ export function EndSessionPage() {
               <Card size="small" className="tt-surface-card" style={{ height: "100%" }}>
                 <Statistic
                   title="Total Entries"
-                  value={session.entries.length}
+                  value={completedSession.entries.length}
                   valueStyle={{ fontSize: 24, fontWeight: 700 }}
                   className="tt-summary-stat"
                 />
@@ -246,7 +288,7 @@ export function EndSessionPage() {
           <p className="tt-section-label mb-3">Employee Summary</p>
           <Row gutter={[12, 12]} style={{ marginBottom: 28 }}>
             {sortedEmployees.map((employee) => {
-              const totals = getEmployeeTotals(employee.id, session.entries);
+              const totals = getEmployeeTotals(employee.id, completedSession.entries);
               const total = getGrandTotal(totals);
               return (
                 <Col key={employee.id} xs={24} sm={12}>

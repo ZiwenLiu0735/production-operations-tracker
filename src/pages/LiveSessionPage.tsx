@@ -78,6 +78,8 @@ export function LiveSessionPage() {
   const [entryFocused, setEntryFocused] = useState(false);
   const [entrySaving, setEntrySaving] = useState(false);
   const [entryError, setEntryError] = useState<string | null>(null);
+  const [endingSession, setEndingSession] = useState(false);
+  const [sessionError, setSessionError] = useState<string | null>(null);
   const [entryConfirm, setEntryConfirm] = useState<{
     category: TrimCategory;
     weight: number;
@@ -230,9 +232,17 @@ export function LiveSessionPage() {
     }
   }
 
-  function handleEndSession() {
-    endSession();
-    navigate(SUMMARY_PATH);
+  async function handleEndSession() {
+    setEndingSession(true);
+    setSessionError(null);
+    try {
+      await endSession();
+      navigate(SUMMARY_PATH);
+    } catch (error) {
+      setSessionError(entryErrorMessage(error));
+    } finally {
+      setEndingSession(false);
+    }
   }
 
   function handleAddEmployee(employee: (typeof activeOperators)[number]) {
@@ -449,7 +459,14 @@ export function LiveSessionPage() {
           >
             Remove Operator
           </Button>
-          <Button danger size="large" icon={<StopOutlined />} onClick={handleEndSession}>
+          <Button
+            danger
+            size="large"
+            icon={<StopOutlined />}
+            onClick={() => void handleEndSession()}
+            loading={endingSession}
+            disabled={endingSession || entrySaving}
+          >
             End Session
           </Button>
         </>
@@ -464,6 +481,17 @@ export function LiveSessionPage() {
             message="Entry was not saved"
             description={entryError}
             onClose={() => setEntryError(null)}
+          />
+        ) : null}
+
+        {sessionError ? (
+          <Alert
+            type="error"
+            showIcon
+            closable
+            message="Session was not completed"
+            description={sessionError}
+            onClose={() => setSessionError(null)}
           />
         ) : null}
 

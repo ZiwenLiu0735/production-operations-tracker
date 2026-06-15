@@ -103,7 +103,9 @@ export function StartSessionPage() {
   const [cadillacBinNumber, setCadillacBinNumber] = useState("");
   const [cadillacUid, setCadillacUid] = useState("");
   const [starting, setStarting] = useState(false);
+  const [ending, setEnding] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
+  const [endError, setEndError] = useState<string | null>(null);
 
   const facilityRooms = useMemo(
     () =>
@@ -237,9 +239,19 @@ export function StartSessionPage() {
     navigate(session?.workType === "trim" ? TRIM_TRACK_LIVE_PATH : HOURLY_TRACK_PATH);
   }
 
-  function handleEndSession() {
-    endSession();
-    navigate(SUMMARY_PATH);
+  async function handleEndSession() {
+    setEnding(true);
+    setEndError(null);
+    try {
+      await endSession();
+      navigate(SUMMARY_PATH);
+    } catch (error) {
+      setEndError(
+        error instanceof Error ? error.message : "Unable to complete session.",
+      );
+    } finally {
+      setEnding(false);
+    }
   }
 
   function handleDeleteSession() {
@@ -269,12 +281,24 @@ export function StartSessionPage() {
               />
             )}
 
+            {endError && (
+              <Alert
+                type="error"
+                showIcon
+                message="Session was not completed"
+                description={endError}
+                closable
+                onClose={() => setEndError(null)}
+              />
+            )}
+
             {hasActiveSession && session && (
               <ActiveSessionFound
                 session={session}
                 onResume={handleResume}
-                onEnd={handleEndSession}
+                onEnd={() => void handleEndSession()}
                 onDelete={() => setShowDeleteModal(true)}
+                ending={ending}
               />
             )}
 

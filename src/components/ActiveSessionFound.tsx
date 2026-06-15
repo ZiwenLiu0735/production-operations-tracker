@@ -9,6 +9,7 @@ interface ActiveSessionFoundProps {
   onResume: () => void;
   onEnd: () => void;
   onDelete: () => void;
+  ending?: boolean;
 }
 
 export function ActiveSessionFound({
@@ -16,6 +17,7 @@ export function ActiveSessionFound({
   onResume,
   onEnd,
   onDelete,
+  ending = false,
 }: ActiveSessionFoundProps) {
   return (
     <Alert
@@ -59,7 +61,13 @@ export function ActiveSessionFound({
             <Button type="primary" size="large" icon={<PlayCircleOutlined />} onClick={onResume}>
               Resume Session
             </Button>
-            <Button size="large" icon={<StopOutlined />} onClick={onEnd}>
+            <Button
+              size="large"
+              icon={<StopOutlined />}
+              onClick={onEnd}
+              loading={ending}
+              disabled={ending}
+            >
               End Session
             </Button>
             <Button danger size="large" icon={<DeleteOutlined />} onClick={onDelete}>
