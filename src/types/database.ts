@@ -312,6 +312,7 @@ export type Database = {
       }
       sessions: {
         Row: {
+          activity_type: string
           bin_number: string | null
           created_at: string
           deleted_at: string | null
@@ -331,6 +332,7 @@ export type Database = {
           work_type: Database["public"]["Enums"]["work_type"]
         }
         Insert: {
+          activity_type: string
           bin_number?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -350,6 +352,7 @@ export type Database = {
           work_type: Database["public"]["Enums"]["work_type"]
         }
         Update: {
+          activity_type?: string
           bin_number?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -534,6 +537,19 @@ export type Database = {
           target_supervisor_profile_ids: string[]
           target_tracking_uid?: string
           target_work_type: Database["public"]["Enums"]["work_type"]
+        }
+        Returns: string
+      }
+      start_production_activity_session: {
+        Args: {
+          target_activity_type: string
+          target_bin_number?: string
+          target_employee_ids: string[]
+          target_facility_id: string
+          target_room_ids: string[]
+          target_strain?: string
+          target_supervisor_profile_ids: string[]
+          target_tracking_uid?: string
         }
         Returns: string
       }
