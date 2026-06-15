@@ -11,6 +11,7 @@ interface EditEntryModalProps {
   onSave: (updates: { weight: number; category: TrimCategory }) => void;
   onDelete: () => void;
   onClose: () => void;
+  saving?: boolean;
 }
 
 export function EditEntryModal({
@@ -19,6 +20,7 @@ export function EditEntryModal({
   onSave,
   onDelete,
   onClose,
+  saving = false,
 }: EditEntryModalProps) {
   const [weight, setWeight] = useState(String(entry.weight));
   const [category, setCategory] = useState<TrimCategory>(entry.category);
@@ -64,6 +66,7 @@ export function EditEntryModal({
               <button
                 key={cat}
                 onClick={() => setCategory(cat)}
+                disabled={saving}
                 className={`min-h-14 rounded-xl border-2 px-4 text-left text-base font-semibold transition-all
                   ${
                     category === cat
@@ -78,15 +81,33 @@ export function EditEntryModal({
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-3">
-          <Button variant="danger" size="lg" fullWidth onClick={onDelete}>
-            Delete
+          <Button
+            variant="danger"
+            size="lg"
+            fullWidth
+            onClick={onDelete}
+            disabled={saving}
+          >
+            {saving ? "Saving…" : "Delete"}
           </Button>
-          <Button size="lg" fullWidth disabled={!canSave} onClick={handleSave}>
-            Save
+          <Button
+            size="lg"
+            fullWidth
+            disabled={!canSave || saving}
+            onClick={handleSave}
+          >
+            {saving ? "Saving…" : "Save"}
           </Button>
         </div>
 
-        <Button variant="ghost" size="md" fullWidth className="mt-3" onClick={onClose}>
+        <Button
+          variant="ghost"
+          size="md"
+          fullWidth
+          className="mt-3"
+          onClick={onClose}
+          disabled={saving}
+        >
           Cancel
         </Button>
       </div>

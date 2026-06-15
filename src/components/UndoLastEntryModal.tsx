@@ -15,6 +15,7 @@ interface UndoLastEntryModalProps {
   employee: Employee;
   onConfirm: () => void;
   onClose: () => void;
+  saving?: boolean;
 }
 
 export function UndoLastEntryModal({
@@ -22,6 +23,7 @@ export function UndoLastEntryModal({
   employee,
   onConfirm,
   onClose,
+  saving = false,
 }: UndoLastEntryModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
@@ -42,16 +44,23 @@ export function UndoLastEntryModal({
           </p>
         </div>
         <div className="mt-6 grid grid-cols-2 gap-3">
-          <Button variant="secondary" size="lg" fullWidth onClick={onClose}>
+          <Button
+            variant="secondary"
+            size="lg"
+            fullWidth
+            onClick={onClose}
+            disabled={saving}
+          >
             Cancel
           </Button>
           <Button
             size="lg"
             fullWidth
             onClick={onConfirm}
+            disabled={saving}
             className="border border-amber-500/50 bg-amber-600/25 text-amber-100 hover:bg-amber-600/40 active:bg-amber-700/40"
           >
-            Undo
+            {saving ? "Removing…" : "Undo"}
           </Button>
         </div>
       </div>

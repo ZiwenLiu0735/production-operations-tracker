@@ -90,6 +90,10 @@ The live workflow uses database functions for its writes:
 - `delete_weight_entry`
 - `complete_production_session`
 
+Live trim entry creation, editing, deletion, and undo are remote-first. The
+frontend updates its local session cache only after the corresponding database
+function succeeds.
+
 Weight entries and session participants are soft-removed so existing production
 records remain traceable. A completed session is the archive record; the data is
 not copied into a second archive table. Session and employee totals are derived

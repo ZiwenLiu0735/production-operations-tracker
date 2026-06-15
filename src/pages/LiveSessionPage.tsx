@@ -4,7 +4,17 @@ import {
   StopOutlined,
   UserAddOutlined,
 } from "@ant-design/icons";
-import { Button, Card, Col, Empty, Input, Row, Space, Typography } from "antd";
+import {
+  Alert,
+  Button,
+  Card,
+  Col,
+  Empty,
+  Input,
+  Row,
+  Space,
+  Typography,
+} from "antd";
 import type { InputRef } from "antd/es/input";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -66,6 +76,8 @@ export function LiveSessionPage() {
   const [showAddEmployee, setShowAddEmployee] = useState(false);
   const [employeeSearchQuery, setEmployeeSearchQuery] = useState("");
   const [entryFocused, setEntryFocused] = useState(false);
+  const [entrySaving, setEntrySaving] = useState(false);
+  const [entryError, setEntryError] = useState<string | null>(null);
   const [entryConfirm, setEntryConfirm] = useState<{
     category: TrimCategory;
     weight: number;
@@ -177,20 +189,35 @@ export function LiveSessionPage() {
     inputRef.current?.input?.focus();
   }
 
-  function handleCategoryClick(category: TrimCategory) {
-    if (!resolvedActiveEmployeeId || parsedWeight === null || !activeEmployee) return;
+  async function handleCategoryClick(category: TrimCategory) {
+    if (
+      !resolvedActiveEmployeeId ||
+      parsedWeight === null ||
+      !activeEmployee ||
+      entrySaving
+    ) {
+      return;
+    }
 
-    addEntry(resolvedActiveEmployeeId, category, parsedWeight);
-    setWeight("");
-    setFlash(category);
-    setTimeout(() => setFlash(null), 400);
-    setEntryConfirm({
-      category,
-      weight: parsedWeight,
-      employeeNumber: activeEmployee.employeeNumber,
-    });
-    setTimeout(() => setEntryConfirm(null), 1500);
-    inputRef.current?.input?.focus();
+    setEntrySaving(true);
+    setEntryError(null);
+    try {
+      await addEntry(resolvedActiveEmployeeId, category, parsedWeight);
+      setWeight("");
+      setFlash(category);
+      setTimeout(() => setFlash(null), 400);
+      setEntryConfirm({
+        category,
+        weight: parsedWeight,
+        employeeNumber: activeEmployee.employeeNumber,
+      });
+      setTimeout(() => setEntryConfirm(null), 1500);
+      inputRef.current?.input?.focus();
+    } catch (error) {
+      setEntryError(entryErrorMessage(error));
+    } finally {
+      setEntrySaving(false);
+    }
   }
 
   function handleBack() {
@@ -263,14 +290,57 @@ export function LiveSessionPage() {
     setUndoEntry(newest);
   }
 
-  function handleConfirmUndo() {
+  async function handleConfirmUndo() {
     const entryToRemove = undoEntry;
-    undoLastEntry();
-    setUndoEntry(null);
-    setToast("Last entry removed");
-    setTimeout(() => setToast(null), 2500);
-    if (editingEntry && entryToRemove && editingEntry.id === entryToRemove.id) {
+    if (!entryToRemove || entrySaving) return;
+
+    setEntrySaving(true);
+    setEntryError(null);
+    try {
+      await undoLastEntry();
+      setUndoEntry(null);
+      setToast("Last entry removed");
+      setTimeout(() => setToast(null), 2500);
+      if (editingEntry && editingEntry.id === entryToRemove.id) {
+        setEditingEntry(null);
+      }
+    } catch (error) {
+      setEntryError(entryErrorMessage(error));
+    } finally {
+      setEntrySaving(false);
+    }
+  }
+
+  async function handleDeleteEntry(entryId: string) {
+    if (entrySaving) return;
+
+    setEntrySaving(true);
+    setEntryError(null);
+    try {
+      await deleteEntry(entryId);
+      if (editingEntry?.id === entryId) setEditingEntry(null);
+    } catch (error) {
+      setEntryError(entryErrorMessage(error));
+    } finally {
+      setEntrySaving(false);
+    }
+  }
+
+  async function handleUpdateEntry(
+    entryId: string,
+    updates: { weight: number; category: TrimCategory },
+  ) {
+    if (entrySaving) return;
+
+    setEntrySaving(true);
+    setEntryError(null);
+    try {
+      await updateEntry(entryId, updates);
       setEditingEntry(null);
+    } catch (error) {
+      setEntryError(entryErrorMessage(error));
+    } finally {
+      setEntrySaving(false);
     }
   }
 
@@ -336,22 +406,22 @@ export function LiveSessionPage() {
           label="Regular Trim"
           variant="regular"
           flash={flash === "regular"}
-          disabled={parsedWeight === null}
-          onClick={() => handleCategoryClick("regular")}
+          disabled={parsedWeight === null || entrySaving}
+          onClick={() => void handleCategoryClick("regular")}
         />
         <CategoryButton
           label="Stick Trim"
           variant="stick"
           flash={flash === "stick"}
-          disabled={parsedWeight === null}
-          onClick={() => handleCategoryClick("stick")}
+          disabled={parsedWeight === null || entrySaving}
+          onClick={() => void handleCategoryClick("stick")}
         />
         <CategoryButton
           label="Smalls"
           variant="smalls"
           flash={flash === "smalls"}
-          disabled={parsedWeight === null}
-          onClick={() => handleCategoryClick("smalls")}
+          disabled={parsedWeight === null || entrySaving}
+          onClick={() => void handleCategoryClick("smalls")}
         />
       </Space>
     </div>
@@ -386,6 +456,17 @@ export function LiveSessionPage() {
       }
     >
       <div className="tt-live-page">
+        {entryError ? (
+          <Alert
+            type="error"
+            showIcon
+            closable
+            message="Entry was not saved"
+            description={entryError}
+            onClose={() => setEntryError(null)}
+          />
+        ) : null}
+
         {isCadillac ? (
           <div className="tt-live-cadillac-bar">
             <CadillacSessionFields
@@ -468,7 +549,8 @@ export function LiveSessionPage() {
                     employee={activeEmployee}
                     entries={activeSession.entries}
                     onEdit={setEditingEntry}
-                    onDelete={deleteEntry}
+                    onDelete={(entryId) => void handleDeleteEntry(entryId)}
+                    disabled={entrySaving}
                   />
                 ) : (
                   <Empty description="Select an employee" />
@@ -509,14 +591,11 @@ export function LiveSessionPage() {
         <EditEntryModal
           entry={editingEntry}
           employee={editingEmployee}
-          onSave={(updates) => {
-            updateEntry(editingEntry.id, updates);
-            setEditingEntry(null);
-          }}
-          onDelete={() => {
-            deleteEntry(editingEntry.id);
-            setEditingEntry(null);
-          }}
+          saving={entrySaving}
+          onSave={(updates) =>
+            void handleUpdateEntry(editingEntry.id, updates)
+          }
+          onDelete={() => void handleDeleteEntry(editingEntry.id)}
           onClose={() => setEditingEntry(null)}
         />
       )}
@@ -524,7 +603,8 @@ export function LiveSessionPage() {
         <UndoLastEntryModal
           entry={undoEntry}
           employee={undoEmployee}
-          onConfirm={handleConfirmUndo}
+          saving={entrySaving}
+          onConfirm={() => void handleConfirmUndo()}
           onClose={() => setUndoEntry(null)}
         />
       )}
@@ -581,11 +661,13 @@ function LiveEmployeeBreakdown({
   entries,
   onEdit,
   onDelete,
+  disabled,
 }: {
   employee: Employee;
   entries: WeightEntry[];
   onEdit: (entry: WeightEntry) => void;
   onDelete: (entryId: string) => void;
+  disabled: boolean;
 }) {
   const totals = getEmployeeTotals(employee.id, entries);
   const grandTotal = getGrandTotal(totals);
@@ -624,10 +706,19 @@ function LiveEmployeeBreakdown({
                         </Text>
                       </div>
                       <Space size={4} wrap>
-                        <Button size="small" onClick={() => onEdit(entry)}>
+                        <Button
+                          size="small"
+                          disabled={disabled}
+                          onClick={() => onEdit(entry)}
+                        >
                           Edit
                         </Button>
-                        <Button size="small" danger onClick={() => onDelete(entry.id)}>
+                        <Button
+                          size="small"
+                          danger
+                          disabled={disabled}
+                          onClick={() => onDelete(entry.id)}
+                        >
                           Delete
                         </Button>
                       </Space>
@@ -672,6 +763,10 @@ function LiveEmployeeBreakdown({
       </Card>
     </Space>
   );
+}
+
+function entryErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Unable to save entry.";
 }
 
 function CategoryButton({
