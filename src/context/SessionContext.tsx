@@ -18,6 +18,7 @@ import { enqueueSync, processSyncQueue } from "../utils/syncQueue";
 interface SessionContextValue {
   session: Session | null;
   startSession: (params: {
+    id: string;
     facilityId: string;
     facilityName: string;
     supervisors: SessionSupervisorSnapshot[];
@@ -85,6 +86,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const startSession = useCallback(
     (params: {
+      id: string;
       facilityId: string;
       facilityName: string;
       supervisors: SessionSupervisorSnapshot[];
@@ -97,7 +99,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const rooms = params.rooms ?? [];
       const supervisors = params.supervisors;
       const newSession: Session = {
-        id: generateId(),
+        id: params.id,
         facilityId: params.facilityId,
         facilityName: params.facilityName,
         supervisors,

@@ -77,6 +77,10 @@ Starting a session uses the `start_production_session` database function. It
 creates the session, room links, supervisor links, and employee links in one
 transaction. If any selected record is invalid, none of the rows are saved.
 
+The frontend calls `start_production_activity_session`, which preserves the
+specific activity (`trim`, `deleaf`, `chop`, `skirt`, `package`, or `sorting`)
+and maps it to the underlying `trim` or `hourly` tracking mode.
+
 The live workflow uses database functions for its writes:
 
 - `add_session_employee`

@@ -3,7 +3,7 @@ import {
   SearchOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
-import { Badge, Button, Card, Col, Empty, Input, Row } from "antd";
+import { Alert, Badge, Button, Card, Col, Empty, Input, Row } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ActiveSessionFound } from "../components/ActiveSessionFound";
@@ -22,9 +22,16 @@ import {
   SUMMARY_PATH,
   TRIM_TRACK_LIVE_PATH,
 } from "../lib/sessionRoutes";
+import {
+  startProductionSession,
+  type ProductionActivityType,
+} from "../repositories/sessionRepository";
 
 
-const WORK_TYPE_OPTIONS = [
+const WORK_TYPE_OPTIONS: {
+  value: ProductionActivityType;
+  label: string;
+}[] = [
   { value: "trim", label: "TRIM" },
   { value: "deleaf", label: "DELEAF" },
   { value: "chop", label: "CHOP" },
@@ -87,7 +94,7 @@ export function StartSessionPage() {
 
   const [facilityId, setFacilityId] = useState("");
   const [selectedRoomIds, setSelectedRoomIds] = useState<string[]>([]);
-  const [workType, setWorkType] = useState("");
+  const [workType, setWorkType] = useState<ProductionActivityType | "">("");
   const [selectedSupervisorIds, setSelectedSupervisorIds] = useState<string[]>([]);
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -95,6 +102,8 @@ export function StartSessionPage() {
   const [cadillacStrain, setCadillacStrain] = useState("");
   const [cadillacBinNumber, setCadillacBinNumber] = useState("");
   const [cadillacUid, setCadillacUid] = useState("");
+  const [starting, setStarting] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
 
   const facilityRooms = useMemo(
     () =>
@@ -126,7 +135,8 @@ export function StartSessionPage() {
     workType !== "" &&
     selectedSupervisorIds.length > 0 &&
     selectedEmployeeIds.length > 0 &&
-    (!facilityHasRooms || selectedRoomIds.length > 0);
+    (!facilityHasRooms || selectedRoomIds.length > 0) &&
+    !starting;
 
   function toggleSupervisor(id: string) {
     setSelectedSupervisorIds((prev) =>
@@ -150,10 +160,10 @@ export function StartSessionPage() {
     );
   }
 
-  function handleStart(event: React.MouseEvent<HTMLButtonElement>) {
+  async function handleStart(event: React.MouseEvent<HTMLElement>) {
     event.preventDefault();
     event.stopPropagation();
-    if (!canStart) return;
+    if (!canStart || !workType) return;
 
     const facility = facilities.find((item) => item.id === facilityId);
     const supervisors = selectedSupervisorIds
@@ -177,24 +187,48 @@ export function StartSessionPage() {
         nickname: employee.preferredName,
       }));
 
-    startSession({
-      facilityId: facility.id,
-      facilityName: facility.name,
-      supervisors,
-      rooms: rooms.length > 0 ? rooms : undefined,
-      cadillac: isCadillac
-        ? {
-            strain: cadillacStrain.trim() || undefined,
-            binNumber: cadillacBinNumber.trim() || undefined,
-            uid: cadillacUid.trim() || undefined,
-          }
-        : undefined,
-      workType,
-      employeeIds: employees.map((employee) => employee.id),
-      employees,
-    });
+    const cadillac = isCadillac
+      ? {
+          strain: cadillacStrain.trim() || undefined,
+          binNumber: cadillacBinNumber.trim() || undefined,
+          uid: cadillacUid.trim() || undefined,
+        }
+      : undefined;
 
-    navigate(getSessionTrackPath(workType));
+    setStarting(true);
+    setStartError(null);
+    try {
+      const sessionId = await startProductionSession({
+        facilityId: facility.id,
+        roomIds: rooms.map((room) => room.id),
+        supervisorProfileIds: supervisors.map((supervisor) => supervisor.id),
+        employeeIds: employees.map((employee) => employee.id),
+        activityType: workType,
+        strain: cadillac?.strain,
+        binNumber: cadillac?.binNumber,
+        trackingUid: cadillac?.uid,
+      });
+
+      startSession({
+        id: sessionId,
+        facilityId: facility.id,
+        facilityName: facility.name,
+        supervisors,
+        rooms: rooms.length > 0 ? rooms : undefined,
+        cadillac,
+        workType,
+        employeeIds: employees.map((employee) => employee.id),
+        employees,
+      });
+
+      navigate(getSessionTrackPath(workType));
+    } catch (error) {
+      setStartError(
+        error instanceof Error ? error.message : "Unable to start session.",
+      );
+    } finally {
+      setStarting(false);
+    }
   }
 
   const hasActiveSession = session !== null && !session.endedAt;
@@ -224,6 +258,17 @@ export function StartSessionPage() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-6 pb-4">
           <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
+            {startError && (
+              <Alert
+                type="error"
+                showIcon
+                message="Session was not started"
+                description={startError}
+                closable
+                onClose={() => setStartError(null)}
+              />
+            )}
+
             {hasActiveSession && session && (
               <ActiveSessionFound
                 session={session}
@@ -416,10 +461,11 @@ export function StartSessionPage() {
               size="large"
               block
               disabled={!canStart}
-              onClick={handleStart}
+              loading={starting}
+              onClick={(event) => void handleStart(event)}
               style={{ height: 56, fontSize: 17, fontWeight: 700, borderRadius: 14 }}
             >
-              Start Session
+              {starting ? "Starting Session…" : "Start Session"}
             </Button>
           </div>
         </div>

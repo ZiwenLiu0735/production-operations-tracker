@@ -11,13 +11,14 @@ weight entry, session summaries, archive management, and exports.
 - React Router
 - Supabase Auth for user login and role-based access
 - Supabase for facilities, rooms, employees, and supervisor profiles
-- Browser `localStorage` for active sessions and archives during the current migration phase
+- Supabase for creating production sessions and their initial participants
+- Browser `localStorage` for live entries and archives during the current migration phase
 - PDF and spreadsheet exports
 
-The backend migration is in progress. Authentication and master-data reads use
-the hosted Supabase project. Active sessions, weight entries, archives, and
-exports still use the existing browser-local workflow until their repository
-layers are connected.
+The backend migration is in progress. Authentication, master data, and initial
+session creation use the hosted Supabase project. Live weight entries, session
+completion, archives, and exports still use the existing browser-local workflow
+until their repository layers are connected.
 
 ## Requirements
 
