@@ -6,7 +6,7 @@ type RoomRow = Database["public"]["Tables"]["rooms"]["Row"];
 type EmployeeRow = Database["public"]["Tables"]["employees"]["Row"];
 type AppRole = Database["public"]["Enums"]["app_role"];
 
-interface SupervisorProfileRow {
+interface ProfileDirectoryRow {
   id: string;
   display_name: string;
   active: boolean;
@@ -39,7 +39,7 @@ export interface EmployeeRecord {
   active: boolean;
 }
 
-export interface SupervisorRecord {
+export interface ProfileDirectoryRecord {
   profileId: string;
   employeeId: string;
   employeeNumber: number;
@@ -53,7 +53,8 @@ export interface RemoteMasterData {
   rooms: RoomRecord[];
   employees: EmployeeRecord[];
   operators: EmployeeRecord[];
-  supervisors: SupervisorRecord[];
+  supervisors: ProfileDirectoryRecord[];
+  admins: ProfileDirectoryRecord[];
 }
 
 function queryError(resource: string, message: string) {
@@ -87,7 +88,9 @@ export function mapEmployee(row: EmployeeRow): EmployeeRecord {
   };
 }
 
-function mapSupervisor(row: SupervisorProfileRow): SupervisorRecord | null {
+function mapProfileDirectoryMember(
+  row: ProfileDirectoryRow,
+): ProfileDirectoryRecord | null {
   const employee = row.employees;
   if (
     !employee ||
@@ -218,29 +221,40 @@ export async function getOperators(): Promise<EmployeeRecord[]> {
   return data.map(mapEmployee);
 }
 
-export async function getSupervisors(): Promise<SupervisorRecord[]> {
+async function getProfileDirectory(
+  role: Extract<AppRole, "admin" | "supervisor">,
+): Promise<ProfileDirectoryRecord[]> {
   const { data, error } = await supabase
     .from("profiles")
     .select(
       "id, display_name, active, role, employee_id, employees(id, employee_number, legal_name, preferred_name, active)",
     )
-    .in("role", ["admin", "supervisor"])
+    .eq("role", role)
     .eq("active", true)
     .order("display_name");
 
-  if (error) throw queryError("supervisors", error.message);
+  if (error) throw queryError(`${role} profiles`, error.message);
 
   return data
-    .map((row) => mapSupervisor(row as SupervisorProfileRow))
-    .filter((row): row is SupervisorRecord => row !== null);
+    .map((row) => mapProfileDirectoryMember(row as ProfileDirectoryRow))
+    .filter((row): row is ProfileDirectoryRecord => row !== null);
+}
+
+export function getSupervisors(): Promise<ProfileDirectoryRecord[]> {
+  return getProfileDirectory("supervisor");
+}
+
+export function getAdmins(): Promise<ProfileDirectoryRecord[]> {
+  return getProfileDirectory("admin");
 }
 
 export async function getMasterData(): Promise<RemoteMasterData> {
-  const [facilities, rooms, employees, supervisors] = await Promise.all([
+  const [facilities, rooms, employees, supervisors, admins] = await Promise.all([
     getFacilities(),
     getRooms(),
     getEmployees(),
     getSupervisors(),
+    getAdmins(),
   ]);
   let operators: EmployeeRecord[];
 
@@ -255,12 +269,12 @@ export async function getMasterData(): Promise<RemoteMasterData> {
     }
 
     const privilegedEmployeeIds = new Set(
-      supervisors.map((supervisor) => supervisor.employeeId),
+      [...supervisors, ...admins].map((member) => member.employeeId),
     );
     operators = employees.filter(
       (employee) => !privilegedEmployeeIds.has(employee.id),
     );
   }
 
-  return { facilities, rooms, employees, operators, supervisors };
+  return { facilities, rooms, employees, operators, supervisors, admins };
 }

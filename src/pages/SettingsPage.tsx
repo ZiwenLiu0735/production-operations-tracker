@@ -3,26 +3,33 @@ import { useNavigate } from "react-router-dom";
 import { AppNav } from "../components/AppNav";
 import { Button } from "../components/Button";
 import { Layout } from "../components/Layout";
-import { EmployeesTab } from "../components/settings/EmployeesTab";
+import { AdminsTab } from "../components/settings/AdminsTab";
+import { OperatorsTab } from "../components/settings/OperatorsTab";
 import { FacilitiesTab } from "../components/settings/FacilitiesTab";
 import { RoomsTab } from "../components/settings/RoomsTab";
 import { SupervisorsTab } from "../components/settings/SupervisorsTab";
 import { useMasterData } from "../context/MasterDataContext";
 import { START_SESSION_PATH } from "../lib/sessionRoutes";
 
-type SettingsTab = "employees" | "facilities" | "rooms" | "supervisors";
+type SettingsTab =
+  | "operators"
+  | "supervisors"
+  | "admins"
+  | "facilities"
+  | "rooms";
 
 const TABS: { id: SettingsTab; label: string }[] = [
-  { id: "employees", label: "Employees" },
+  { id: "operators", label: "Operators" },
+  { id: "supervisors", label: "Supervisors" },
+  { id: "admins", label: "Admins" },
   { id: "facilities", label: "Facilities" },
   { id: "rooms", label: "Rooms" },
-  { id: "supervisors", label: "Supervisors" },
 ];
 
 export function SettingsPage() {
   const navigate = useNavigate();
   const { reload } = useMasterData();
-  const [activeTab, setActiveTab] = useState<SettingsTab>("facilities");
+  const [activeTab, setActiveTab] = useState<SettingsTab>("operators");
 
   return (
     <Layout
@@ -53,15 +60,16 @@ export function SettingsPage() {
             <section className="rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-4">
               <h2 className="text-sm font-bold text-blue-100">Supabase master data</h2>
               <p className="mt-1 text-sm text-white/50">
-                Facility and room editing are enabled. Employees and user roles
-                remain read-only until their admin workflows are connected.
+                Role directories are read-only. User accounts and employee
+                details will be managed together from the Users page.
               </p>
             </section>
 
-            {activeTab === "employees" && <EmployeesTab />}
+            {activeTab === "operators" && <OperatorsTab />}
+            {activeTab === "supervisors" && <SupervisorsTab />}
+            {activeTab === "admins" && <AdminsTab />}
             {activeTab === "facilities" && <FacilitiesTab />}
             {activeTab === "rooms" && <RoomsTab />}
-            {activeTab === "supervisors" && <SupervisorsTab />}
           </div>
         </div>
 

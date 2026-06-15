@@ -7,7 +7,14 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { Employee, Facility, MasterData, Room, Supervisor } from "../types";
+import type {
+  Employee,
+  Facility,
+  MasterData,
+  ProfileDirectoryMember,
+  Room,
+  Supervisor,
+} from "../types";
 import {
   createFacility as createFacilityRecord,
   createRoom as createRoomRecord,
@@ -21,6 +28,7 @@ import { sortEmployeesByNumber } from "../utils/employees";
 interface MasterDataContextValue {
   employees: Employee[];
   operators: Employee[];
+  admins: ProfileDirectoryMember[];
   facilities: Facility[];
   rooms: Room[];
   supervisors: Supervisor[];
@@ -53,6 +61,7 @@ const EMPTY_MASTER_DATA: MasterData = {
 
 interface MasterDataState extends MasterData {
   operators: Employee[];
+  admins: ProfileDirectoryMember[];
 }
 
 function toMasterData(remote: RemoteMasterData): MasterData {
@@ -72,6 +81,14 @@ function toMasterDataState(remote: RemoteMasterData): MasterDataState {
   return {
     ...toMasterData(remote),
     operators: remote.operators,
+    admins: remote.admins.map((admin) => ({
+      profileId: admin.profileId,
+      employeeId: admin.employeeId,
+      employeeNumber: admin.employeeNumber,
+      name: admin.displayName,
+      active: admin.active,
+      role: admin.role,
+    })),
   };
 }
 
@@ -79,6 +96,7 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<MasterDataState>({
     ...EMPTY_MASTER_DATA,
     operators: [],
+    admins: [],
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -203,6 +221,7 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
     () => ({
       employees,
       operators,
+      admins: data.admins,
       facilities: data.facilities,
       rooms: data.rooms,
       supervisors: data.supervisors,
