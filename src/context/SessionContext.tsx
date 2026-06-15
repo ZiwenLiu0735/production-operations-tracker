@@ -8,10 +8,14 @@ import {
   type ReactNode,
 } from "react";
 import type { Session, SessionCadillacMeta, SessionEmployeeSnapshot, SessionRoomSnapshot, SessionSupervisorSnapshot, TrimCategory, WeightEntry } from "../types";
+import {
+  deleteWeightEntry,
+  recordWeightEntry,
+  updateWeightEntry,
+} from "../repositories/weightEntryRepository";
 import { archiveSession } from "../utils/archive";
 import { joinRoomNames, joinSupervisorNames } from "../utils/sessionDisplay";
-import { generateId } from "../utils/id";
-import { getNewestEntry, undoLastEntry } from "../utils/sessionEntries";
+import { getNewestEntry } from "../utils/sessionEntries";
 import { loadActiveSession, persistActiveSession } from "../utils/sessionPersist";
 import { enqueueSync, processSyncQueue } from "../utils/syncQueue";
 
@@ -29,13 +33,17 @@ interface SessionContextValue {
     employees: SessionEmployeeSnapshot[];
   }) => void;
   updateSessionCadillac: (updates: SessionCadillacMeta) => void;
-  addEntry: (employeeId: string, category: TrimCategory, weight: number) => void;
+  addEntry: (
+    employeeId: string,
+    category: TrimCategory,
+    weight: number,
+  ) => Promise<WeightEntry>;
   updateEntry: (
     entryId: string,
     updates: { weight?: number; category?: TrimCategory },
-  ) => void;
-  deleteEntry: (entryId: string) => void;
-  undoLastEntry: () => WeightEntry | null;
+  ) => Promise<void>;
+  deleteEntry: (entryId: string) => Promise<void>;
+  undoLastEntry: () => Promise<WeightEntry | null>;
   addEmployee: (employee: SessionEmployeeSnapshot) => void;
   removeEmployee: (employeeId: string) => void;
   endSession: () => void;
@@ -137,28 +145,54 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addEntry = useCallback(
-    (employeeId: string, category: TrimCategory, weight: number) => {
-      setSession((prev) => {
-        if (!prev) return prev;
-        const entry: WeightEntry = {
-          id: generateId(),
+    async (employeeId: string, category: TrimCategory, weight: number) => {
+      if (!session || session.endedAt) {
+        throw new Error("No active session is available.");
+      }
+
+      const entry: WeightEntry = {
+        id: await recordWeightEntry({
+          sessionId: session.id,
           employeeId,
           category,
-          weight: Math.round(weight),
-          timestamp: Date.now(),
-        };
+          weight,
+        }),
+        employeeId,
+        category,
+        weight: Math.round(weight),
+        timestamp: Date.now(),
+      };
+
+      setSession((prev) => {
+        if (!prev || prev.id !== session.id) return prev;
         const next = { ...prev, entries: [...prev.entries, entry] };
         commitSession(next);
         return next;
       });
+
+      return entry;
     },
-    [],
+    [session],
   );
 
   const updateEntry = useCallback(
-    (entryId: string, updates: { weight?: number; category?: TrimCategory }) => {
+    async (
+      entryId: string,
+      updates: { weight?: number; category?: TrimCategory },
+    ) => {
+      const entry = session?.entries.find((item) => item.id === entryId);
+      if (!session || !entry || session.endedAt) {
+        throw new Error("The active weight entry was not found.");
+      }
+
+      const weight =
+        updates.weight !== undefined ? Math.round(updates.weight) : entry.weight;
+      const category = updates.category ?? entry.category;
+
+      await updateWeightEntry({ entryId, weight, category });
+
       setSession((prev) => {
-        if (!prev) return prev;
+        if (!prev || prev.id !== session.id) return prev;
         const next = {
           ...prev,
           entries: prev.entries.map((entry) => {
@@ -176,12 +210,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         return next;
       });
     },
-    [],
+    [session],
   );
 
-  const deleteEntry = useCallback((entryId: string) => {
+  const deleteEntry = useCallback(async (entryId: string) => {
+    if (!session || !session.entries.some((entry) => entry.id === entryId)) {
+      throw new Error("The active weight entry was not found.");
+    }
+
+    await deleteWeightEntry(entryId);
+
     setSession((prev) => {
-      if (!prev) return prev;
+      if (!prev || prev.id !== session.id) return prev;
       const next = {
         ...prev,
         entries: prev.entries.filter((e) => e.id !== entryId),
@@ -189,21 +229,27 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       commitSession(next);
       return next;
     });
-  }, []);
+  }, [session]);
 
-  const undoLastEntryFn = useCallback((): WeightEntry | null => {
-    let removed: WeightEntry | null = null;
+  const undoLastEntryFn = useCallback(async (): Promise<WeightEntry | null> => {
+    if (!session || session.endedAt) return null;
+    const newest = getNewestEntry(session.entries);
+    if (!newest) return null;
+
+    await deleteWeightEntry(newest.id);
+
     setSession((prev) => {
-      if (!prev || prev.endedAt) return prev;
-      const newest = getNewestEntry(prev.entries);
-      if (!newest) return prev;
-      removed = newest;
-      const next = undoLastEntry(prev);
+      if (!prev || prev.id !== session.id) return prev;
+      const next = {
+        ...prev,
+        entries: prev.entries.filter((entry) => entry.id !== newest.id),
+      };
       commitSession(next);
       return next;
     });
-    return removed;
-  }, []);
+
+    return newest;
+  }, [session]);
 
   const addEmployee = useCallback((employee: SessionEmployeeSnapshot) => {
     setSession((prev) => {

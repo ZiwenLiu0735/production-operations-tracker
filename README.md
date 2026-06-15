@@ -12,11 +12,12 @@ weight entry, session summaries, archive management, and exports.
 - Supabase Auth for user login and role-based access
 - Supabase for facilities, rooms, employees, and supervisor profiles
 - Supabase for creating production sessions and their initial participants
-- Browser `localStorage` for live entries and archives during the current migration phase
+- Supabase for recording, updating, and deleting live trim weight entries
+- Browser `localStorage` for live UI state and archives during the current migration phase
 - PDF and spreadsheet exports
 
-The backend migration is in progress. Authentication, master data, and initial
-session creation use the hosted Supabase project. Live weight entries, session
+The backend migration is in progress. Authentication, master data, session
+creation, and live trim weight entries use the hosted Supabase project. Session
 completion, archives, and exports still use the existing browser-local workflow
 until their repository layers are connected.
 
