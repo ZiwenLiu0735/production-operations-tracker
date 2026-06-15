@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppNav } from "../components/AppNav";
 import { Button } from "../components/Button";
-import { useEditorNameAction } from "../components/EditorNameModal";
 import { Layout } from "../components/Layout";
 import { useArchive, useArchiveRefreshOnMount } from "../context/ArchiveContext";
 import { formatDate, formatWeight } from "../utils/format";
@@ -11,14 +10,12 @@ import { getGrandTotal } from "../types";
 export function ArchivePage() {
   useArchiveRefreshOnMount();
   const navigate = useNavigate();
-  const { searchArchives, softDeleteSession, duplicateSession, restoreSession } = useArchive();
-  const { runWithEditorName, editorModal } = useEditorNameAction();
+  const { error, loading, refreshArchives, searchArchives } = useArchive();
   const [query, setQuery] = useState("");
-  const [includeDeleted, setIncludeDeleted] = useState(false);
 
   const results = useMemo(() => {
-    return searchArchives(query, includeDeleted).sort((a, b) => b.endedAt - a.endedAt);
-  }, [query, includeDeleted, searchArchives]);
+    return searchArchives(query).sort((a, b) => b.endedAt - a.endedAt);
+  }, [query, searchArchives]);
 
   return (
     <Layout
@@ -35,20 +32,26 @@ export function ArchivePage() {
             placeholder="Search by employee ID, name, date, or facility…"
             className="tt-input max-w-3xl"
           />
-          <label className="flex items-center gap-2 text-sm text-white/50">
-            <input
-              type="checkbox"
-              checked={includeDeleted}
-              onChange={(e) => setIncludeDeleted(e.target.checked)}
-              className="h-4 w-4 rounded border-surface-600"
-            />
-            Show soft-deleted sessions
-          </label>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
           <div className="mx-auto w-full max-w-3xl space-y-3">
-            {results.length === 0 ? (
+            {loading ? (
+              <p className="text-center text-sm text-white/40">
+                Loading completed sessions…
+              </p>
+            ) : error ? (
+              <div className="flex flex-col items-center gap-3 text-center">
+                <p className="text-sm text-red-300">{error}</p>
+                <Button
+                  size="md"
+                  variant="secondary"
+                  onClick={() => void refreshArchives()}
+                >
+                  Try Again
+                </Button>
+              </div>
+            ) : results.length === 0 ? (
               <p className="text-center text-sm text-white/40">
                 {query.trim()
                   ? "No sessions match your search"
@@ -57,12 +60,11 @@ export function ArchivePage() {
             ) : (
               results.map((session) => {
                 const grandTotal = getGrandTotal(session.sessionTotals);
-                const isDeleted = Boolean(session.deletedAt);
 
                 return (
                   <div
                     key={session.id}
-                    className={`tt-archive-card ${isDeleted ? "tt-archive-card--deleted" : ""}`}
+                    className="tt-archive-card"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -76,11 +78,6 @@ export function ArchivePage() {
                         <p className="mt-1 text-xs text-white/40">
                           {session.employees.length} employees · {session.entries.filter((e) => !e.deletedAt).length} active entries
                         </p>
-                        {isDeleted && (
-                          <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-red-400">
-                            Soft deleted
-                          </p>
-                        )}
                       </div>
                       <div className="shrink-0 text-right">
                         <p className="text-lg font-bold tabular-nums text-brand-400">
@@ -93,50 +90,6 @@ export function ArchivePage() {
                       <Button size="md" variant="secondary" onClick={() => navigate(`/archive/${session.id}`)}>
                         View
                       </Button>
-                      {!isDeleted && (
-                        <Button size="md" onClick={() => navigate(`/archive/${session.id}/edit`)}>
-                          Edit
-                        </Button>
-                      )}
-                      <Button
-                        size="md"
-                        variant="secondary"
-                        onClick={() => {
-                          runWithEditorName((editedBy) => {
-                            const duplicate = duplicateSession(session.id, editedBy);
-                            if (duplicate) navigate(`/archive/${duplicate.id}/edit`);
-                          });
-                        }}
-                      >
-                        Duplicate
-                      </Button>
-                      {isDeleted ? (
-                        <Button
-                          size="md"
-                          variant="secondary"
-                          onClick={() => {
-                            runWithEditorName((editedBy) => restoreSession(session.id, editedBy));
-                          }}
-                        >
-                          Restore
-                        </Button>
-                      ) : (
-                        <Button
-                          size="md"
-                          variant="danger"
-                          onClick={() => {
-                            if (
-                              confirm(
-                                "Soft delete this archived session? It will be hidden from the list but preserved for audit.",
-                              )
-                            ) {
-                              runWithEditorName((editedBy) => softDeleteSession(session.id, editedBy));
-                            }
-                          }}
-                        >
-                          Delete
-                        </Button>
-                      )}
                     </div>
                   </div>
                 );
@@ -145,7 +98,6 @@ export function ArchivePage() {
           </div>
         </div>
       </div>
-      {editorModal}
     </Layout>
   );
 }

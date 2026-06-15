@@ -17,7 +17,6 @@ import {
   completeProductionSession,
   getProductionSession,
 } from "../repositories/sessionRepository";
-import { archiveSession } from "../utils/archive";
 import { joinRoomNames, joinSupervisorNames } from "../utils/sessionDisplay";
 import { getNewestEntry } from "../utils/sessionEntries";
 import { loadActiveSession, persistActiveSession } from "../utils/sessionPersist";
@@ -290,9 +289,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const completedSession = await getProductionSession(session.id);
 
     commitSession(completedSession);
-    archiveSession(completedSession);
-    enqueueSync("session_archived", completedSession.id);
-    processSyncQueue();
     setSession(completedSession);
     return completedSession;
   }, [session]);

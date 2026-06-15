@@ -12,8 +12,6 @@ import {
 import { SessionProvider } from "./context/SessionContext";
 import { SyncProvider } from "./context/SyncContext";
 import { ArchiveDetailPage } from "./pages/ArchiveDetailPage";
-import { ArchiveEditPage } from "./pages/ArchiveEditPage";
-import { ArchiveEmployeeEditPage } from "./pages/ArchiveEmployeeEditPage";
 import { ArchivePage } from "./pages/ArchivePage";
 import { LiveSessionPage } from "./pages/LiveSessionPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -80,10 +78,13 @@ function OperationalRoutes() {
                 />
                 <Route path="/archive" element={<ArchivePage />} />
                 <Route path="/archive/:id" element={<ArchiveDetailPage />} />
-                <Route path="/archive/:id/edit" element={<ArchiveEditPage />} />
+                <Route
+                  path="/archive/:id/edit"
+                  element={<Navigate to=".." replace />}
+                />
                 <Route
                   path="/archive/:id/employee/:employeeId"
-                  element={<ArchiveEmployeeEditPage />}
+                  element={<Navigate to="../.." replace />}
                 />
                 <Route path={SUMMARY_PATH} element={<EndSessionPage />} />
                 <Route

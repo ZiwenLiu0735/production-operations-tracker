@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AppNav } from "../components/AppNav";
-import { AuditTrailPanel } from "../components/AuditTrailPanel";
 import { Button } from "../components/Button";
 import { EmployeeIdentity } from "../components/EmployeeIdentity";
 import { Layout } from "../components/Layout";
@@ -18,7 +17,7 @@ export function ArchiveDetailPage() {
   useArchiveRefreshOnMount();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getArchive } = useArchive();
+  const { error, getArchive, loading, refreshArchives } = useArchive();
 
   const archived = id ? getArchive(id) : null;
 
@@ -35,6 +34,27 @@ export function ArchiveDetailPage() {
     [archived],
   );
 
+  if (loading) {
+    return (
+      <Layout title="Session Archive" headerRight={<AppNav />}>
+        <div className="flex flex-1 items-center justify-center p-6 text-white/50">
+          Loading completed session…
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout title="Session Archive" headerRight={<AppNav />}>
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
+          <p className="text-red-300">{error}</p>
+          <Button onClick={() => void refreshArchives()}>Try Again</Button>
+        </div>
+      </Layout>
+    );
+  }
+
   if (!archived || !sessionView) {
     return (
       <Layout title="Session Archive" headerRight={<AppNav />}>
@@ -49,7 +69,6 @@ export function ArchiveDetailPage() {
   }
 
   const sessionGrandTotal = getGrandTotal(archived.sessionTotals);
-  const isDeleted = Boolean(archived.deletedAt);
 
   async function handleEmployeeReceipts() {
     const { exportEmployeeReceiptPDFs } = await import("../utils/pdfExport");
@@ -68,7 +87,7 @@ export function ArchiveDetailPage() {
   return (
     <Layout
       title="Archived Session"
-      subtitle={isDeleted ? "Soft deleted · read-only view" : "View mode · payroll and audit review"}
+      subtitle="Supabase record · read-only payroll review"
       onBack={() => navigate("/archive")}
       backLabel="Archive"
       headerRight={<AppNav />}
@@ -76,21 +95,6 @@ export function ArchiveDetailPage() {
     >
       <div className="flex flex-1 flex-col overflow-y-auto p-6">
         <div className="mx-auto w-full max-w-5xl">
-          {isDeleted && (
-            <div className="mb-6 rounded-xl border border-red-500/30 bg-red-600/10 px-4 py-3 text-sm text-red-200">
-              This session was soft deleted. Data is preserved for audit but hidden from the default
-              archive list.
-            </div>
-          )}
-
-          {!isDeleted && (
-            <div className="mb-6 flex flex-wrap gap-2">
-              <Button size="md" onClick={() => navigate(`/archive/${archived.id}/edit`)}>
-                Edit Session
-              </Button>
-            </div>
-          )}
-
           {archived.notes && (
             <div className="mb-6 rounded-xl border border-surface-600/50 bg-surface-800/60 px-4 py-3">
               <p className="text-xs font-semibold uppercase tracking-wider text-white/40">Notes</p>
@@ -171,8 +175,6 @@ export function ArchiveDetailPage() {
               Raw Data CSV
             </Button>
           </div>
-
-          <AuditTrailPanel audits={archived.auditLog} />
         </div>
       </div>
     </Layout>
@@ -187,4 +189,3 @@ function InfoCard({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-
