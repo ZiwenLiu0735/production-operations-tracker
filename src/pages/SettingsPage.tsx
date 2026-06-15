@@ -8,10 +8,13 @@ import { OperatorsTab } from "../components/settings/OperatorsTab";
 import { FacilitiesTab } from "../components/settings/FacilitiesTab";
 import { RoomsTab } from "../components/settings/RoomsTab";
 import { SupervisorsTab } from "../components/settings/SupervisorsTab";
+import { UsersTab } from "../components/settings/UsersTab";
+import { useAuth } from "../context/AuthContext";
 import { useMasterData } from "../context/MasterDataContext";
 import { START_SESSION_PATH } from "../lib/sessionRoutes";
 
 type SettingsTab =
+  | "users"
   | "operators"
   | "supervisors"
   | "admins"
@@ -19,6 +22,7 @@ type SettingsTab =
   | "rooms";
 
 const TABS: { id: SettingsTab; label: string }[] = [
+  { id: "users", label: "Users" },
   { id: "operators", label: "Operators" },
   { id: "supervisors", label: "Supervisors" },
   { id: "admins", label: "Admins" },
@@ -28,8 +32,9 @@ const TABS: { id: SettingsTab; label: string }[] = [
 
 export function SettingsPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { reload } = useMasterData();
-  const [activeTab, setActiveTab] = useState<SettingsTab>("operators");
+  const [activeTab, setActiveTab] = useState<SettingsTab>("users");
 
   return (
     <Layout
@@ -60,11 +65,14 @@ export function SettingsPage() {
             <section className="rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-4">
               <h2 className="text-sm font-bold text-blue-100">Supabase master data</h2>
               <p className="mt-1 text-sm text-white/50">
-                Role directories are read-only. User accounts and employee
-                details will be managed together from the Users page.
+                Users manages login accounts, employee details, and roles.
+                Role directories provide read-only operational views.
               </p>
             </section>
 
+            {activeTab === "users" && user && (
+              <UsersTab currentUserId={user.id} onUsersChanged={reload} />
+            )}
             {activeTab === "operators" && <OperatorsTab />}
             {activeTab === "supervisors" && <SupervisorsTab />}
             {activeTab === "admins" && <AdminsTab />}

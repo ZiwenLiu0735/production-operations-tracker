@@ -30,9 +30,10 @@ identity:
 auth.users 1---1 profiles 1---1 employees
 ```
 
-The Auth trigger creates a profile with the default `operator` role. An
-administrator then links that profile to an existing employee. An active login
-without an employee link cannot access operational data.
+The Auth trigger creates a profile with the default `operator` role. The admin
+Users workflow runs in a Supabase Edge Function and creates the Auth user,
+employee, and profile link together. An active login without an employee link
+cannot access operational data.
 
 ## Database Model
 
@@ -116,6 +117,11 @@ API.
 - The browser receives only the project URL and publishable key.
 - Secret or service-role keys must never be placed in Vite environment
   variables or committed to Git.
+- Auth administration runs only in the `user-management` Edge Function. The
+  function validates the caller as an active admin before using service-role
+  access.
+- Accounts are deactivated instead of physically deleted so historical session
+  references remain intact.
 
 ## Frontend Boundaries
 
