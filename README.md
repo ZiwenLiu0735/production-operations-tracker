@@ -122,6 +122,14 @@ Run `npm run supabase:types` after applying schema migrations. Commit the
 generated `src/types/database.ts` file so frontend database queries and RPC
 calls are checked against the current schema.
 
+After merging database or Edge Function changes, deploy both parts from
+`main`:
+
+```bash
+npx supabase db push
+npx supabase functions deploy user-management
+```
+
 Cloudflare Pages must define `VITE_SUPABASE_URL` and
 `VITE_SUPABASE_PUBLISHABLE_KEY` for both Preview and Production deployments.
 Only the publishable browser key belongs in frontend environment variables;
@@ -153,8 +161,8 @@ never expose a Supabase secret or service-role key.
 - Review and edit completed sessions
 - Preserve an audit trail for archive changes
 - View role-specific operator, supervisor, and admin directories
+- Admins can create and manage Auth users, employee details, roles, and access
 - Admins can manage facilities and rooms in Supabase
-- User accounts and employee roles remain read-only during the migration
 
 ## Development Workflow
 
